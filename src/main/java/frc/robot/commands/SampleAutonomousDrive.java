@@ -7,46 +7,34 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.RobotContainer;
 import frc.robot.subsystems.DriveTrain;
 
-public class CheesyDrive extends CommandBase {
+public class SampleAutonomousDrive extends CommandBase {
   DriveTrain driveTrain;
+  Timer t;
   /**
-   * Creates a new CheesyDrive.
+   * Creates a new SampleAutonomousDrive.
    */
-  public CheesyDrive(DriveTrain newDriveTrain) {
+  public SampleAutonomousDrive(DriveTrain dt) {
     // Use addRequirements() here to declare subsystem dependencies.
-    driveTrain = newDriveTrain;
+    driveTrain = dt;
     addRequirements(driveTrain);
+    t = new Timer();
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    t.reset();
+    t.start();
   }
-  enum Mode{
-    Cheesy,
-    Turn,
-    FullSpeed;
-  }
+
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    Mode m = Mode.Turn;
-    switch (m){
-      case Cheesy: {
-        driveTrain.cheesyDrive(-RobotContainer.driverJoystick.getRawAxis(1), RobotContainer.driverJoystick.getRawAxis(4), false);
-    } break;
-      case Turn: {
-        driveTrain.setSpeedsTankDrive(-(RobotContainer.driverJoystick.getRawButton(1)?1:0),(RobotContainer.driverJoystick.getRawButton(1)?1:0));
-      } break;
-      case FullSpeed: {
-        driveTrain.setSpeedsTankDrive((RobotContainer.driverJoystick.getRawButton(1)?1:0),(RobotContainer.driverJoystick.getRawButton(1)?1:0));
-      } break;
-    }
-    
+    driveTrain.setSpeedsTankDrive(0.6, 0.6);
   }
 
   // Called once the command ends or is interrupted.
