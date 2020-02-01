@@ -56,6 +56,10 @@ public class RobotContainer {
   NetworkTableEntry left_back_current;
   NetworkTableEntry right_front_current;
   NetworkTableEntry right_back_current;
+  NetworkTableEntry left_front_encoder;
+  NetworkTableEntry left_back_encoder;
+  NetworkTableEntry right_front_encoder;
+  NetworkTableEntry right_back_encoder;
   NetworkTableEntry gyro;
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
@@ -109,6 +113,10 @@ public class RobotContainer {
     left_back_current = layout.add("Left Back Current", 0).getEntry();
     right_front_current = layout.add("Right Front Current", 0).getEntry();
     right_back_current = layout.add("Right Back Current", 0).getEntry();
+    left_front_encoder = layout.add("Left Front Encoder", 0).getEntry();
+    left_back_encoder = layout.add("Left Back Encoder", 0).getEntry();
+    right_front_encoder = layout.add("Right Front Encoder", 0).getEntry();
+    right_back_encoder = layout.add("Right Back Encoder", 0).getEntry();
     gyro = layout.add("Gyro", 0).getEntry();
   }
   public void setData(){
@@ -127,6 +135,11 @@ public class RobotContainer {
     left_back_current.setNumber(speeds[1]);
     right_front_current.setNumber(speeds[2]);
     right_back_current.setNumber(speeds[3]);
+    speeds = driveTrain.getSpeeds_encoder();
+    left_front_encoder.setNumber(speeds[0]);
+    left_back_encoder.setNumber(speeds[1]);
+    right_front_encoder.setNumber(speeds[2]);
+    right_back_encoder.setNumber(speeds[3]);
     gyro.setNumber(driveTrain.getGyro());
   }
 
