@@ -7,314 +7,251 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.BiConsumer;
+
 import com.revrobotics.CANEncoder;
-import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Servo;
-import edu.wpi.first.wpilibj.SlewRateLimiter;
-import edu.wpi.first.wpilibj.SpeedControllerGroup;
-import edu.wpi.first.wpilibj.controller.PIDController;
-import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
-import frc.robot.RobotContainer;
-import frc.robot.RobotContainer.RobotType;
+import frc.robot.Tools;
+import frc.robot.Constants.DriveConstants;
 
 public class DriveTrain extends SubsystemBase {
-  ADXRS450_Gyro gyro;
-  //CANSparkMax left_shoot
-  //CANSparkMax right_shoo
-  //public SpeedController
-  CANSparkMax left_front;
-  CANSparkMax left_back;
-  CANSparkMax right_front;
-  CANSparkMax right_back;
-  private DifferentialDrive driveTrain;
-
-  //REV Examples:
-  private CANPIDController left_pidController;
-  private CANEncoder left_encoder;
-  private CANPIDController right_pidController;
-  private CANEncoder right_encoder;
-  public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxVel, minVel, maxAcc, allowedErr;
+  // The motors on the left side of the drive.
+  private final CANSparkMax m_leftFrontMotor;
+  private final CANSparkMax m_leftBackMotor ;
+  private final CANSparkMax m_rightFrontMotor;
+  private final CANSparkMax m_rightBackMotor;
   
-  //WPI Examples:
-  public SlewRateLimiter speedLimiter = new SlewRateLimiter(3);
-  public SlewRateLimiter rotationLimiter = new SlewRateLimiter(3);
-  public static final double radius = 0.234;
-  public static final double maxRPM = 5700;
-  public static final double wheelTurnsPerRevolution = 1 / 8.44;
-  public static final double rpm2feetPerSecond = 2 * Math.PI * radius * wheelTurnsPerRevolution / 60;
-  public static final double maxSpeed = maxRPM * rpm2feetPerSecond;
-  public static final double trackWidth = 2.15;
-  private final PIDController m_leftPIDController = new PIDController(1, 0, 0);
-  private final PIDController m_rightPIDController = new PIDController(1, 0, 0);
+  // The robot's drive
+  private final DifferentialDrive m_drive;
 
-  public static final double kMaxAngularSpeed = 2 * Math.PI; // one rotation per second
+  // The left-side drive encoder
+  private final CANEncoder m_leftEncoder;
 
+  // The right-side drive encoder
+  private final CANEncoder m_rightEncoder;
 
+  // The gyro sensor
+  private final Gyro m_gyro;
 
-  private final DifferentialDriveKinematics m_kinematics
-      = new DifferentialDriveKinematics(trackWidth);
-  // Gains are for example purposes only - must be determined for your own robot!
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 3);
-  //public Servo servo
+  // Odometry class for tracking robot pose
+  private final DifferentialDriveOdometry m_odometry;
+  
   /**
-   * Creates a new DriveTrain.
+   * Creates a new DriveSubsystem.
    */
-  public DriveTrain(RobotType robot) {
-    switch (robot){
-      case Jeff: {
-        gyro = new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
-        left_front = new CANSparkMax(1, MotorType.kBrushless);
-        left_back = new CANSparkMax(2, MotorType.kBrushless);
-        right_front = new CANSparkMax(3, MotorType.kBrushless);
-        right_back = new CANSparkMax(4, MotorType.kBrushless);
-        driveTrain = new DifferentialDrive(
-          new SpeedControllerGroup(left_front, left_back), 
-          new SpeedControllerGroup(right_front, right_back));
-      } break;
-      case WC: {
-        gyro = null;//new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
-        left_front = new CANSparkMax(8, MotorType.kBrushless);
-        left_back = new CANSparkMax(10, MotorType.kBrushless);
-        right_front = new CANSparkMax(7, MotorType.kBrushless);
-        right_back = new CANSparkMax(9, MotorType.kBrushless);
-        left_back.follow(left_front);
-        right_back.follow(right_front);
-        // driveTrain = new DifferentialDrive(
-        //   new SpeedControllerGroup(left_front, left_back), 
-        //   new SpeedControllerGroup(right_front, right_back));
-          driveTrain = new DifferentialDrive(left_front,right_front);
-      } break;
-      case KOP: {
-        gyro = null;//new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
-        left_front = new CANSparkMax(4, MotorType.kBrushless);
-        left_back = new CANSparkMax(5, MotorType.kBrushless);
-        right_front = new CANSparkMax(3, MotorType.kBrushless);
-        right_back = new CANSparkMax(6, MotorType.kBrushless);
-        left_back.follow(left_front);
-        right_back.follow(right_front);
-        
-        // driveTrain = new DifferentialDrive(
-        //   new SpeedControllerGroup(left_front, left_back), 
-        //   new SpeedControllerGroup(right_front, right_back));
-          //driveTrain = new DifferentialDrive(left_front,right_front);
-          right_front.setInverted(true);
-          right_back.setInverted(true);
-      } break;
-      default: {
-
-      }
+  public DriveTrain() {
+    if (DriveConstants.kHasDriveTrain) {
+      m_leftFrontMotor = new CANSparkMax(DriveConstants.kLeftMotor1Port, MotorType.kBrushless);
+      m_leftBackMotor = new CANSparkMax(DriveConstants.kLeftMotor2Port, MotorType.kBrushless);
+      m_rightFrontMotor = new CANSparkMax(DriveConstants.kRightMotor1Port, MotorType.kBrushless);
+      m_rightBackMotor = new CANSparkMax(DriveConstants.kRightMotor2Port, MotorType.kBrushless);
+      m_rightEncoder = m_rightFrontMotor.getEncoder();
+      m_leftEncoder = m_leftFrontMotor.getEncoder();
+      m_gyro = new ADXRS450_Gyro();
+      m_drive = new DifferentialDrive(m_leftFrontMotor, m_rightFrontMotor);
+  
+      m_leftFrontMotor.restoreFactoryDefaults();
+      m_leftBackMotor.restoreFactoryDefaults();
+      m_rightFrontMotor.restoreFactoryDefaults();
+      m_rightBackMotor.restoreFactoryDefaults();
+      //Bind the front and back SparkMax's together using the follow() command
+      m_leftBackMotor.follow(m_leftFrontMotor);
+      m_rightBackMotor.follow(m_rightFrontMotor);
+  
+      // Sets the distance per pulse for the encoders
+      m_leftEncoder.setPositionConversionFactor(DriveConstants.kRevolutionsToMeters);
+      m_rightEncoder.setPositionConversionFactor(DriveConstants.kRevolutionsToMeters);
+      m_leftEncoder.setVelocityConversionFactor(DriveConstants.kRPMtoMetersPerSecond);
+      m_rightEncoder.setVelocityConversionFactor(DriveConstants.kRPMtoMetersPerSecond);
+      resetEncoders();
+      m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()));
+    
+      m_gyro.reset();
+  
+      m_leftFrontMotor.setIdleMode(IdleMode.kBrake);
+      m_leftBackMotor.setIdleMode(IdleMode.kBrake);
+      m_rightFrontMotor.setIdleMode(IdleMode.kBrake);
+      m_rightBackMotor.setIdleMode(IdleMode.kBrake);
     }
-    left_front.setIdleMode(IdleMode.kBrake);
-    left_back.setIdleMode(IdleMode.kBrake);
-    right_front.setIdleMode(IdleMode.kBrake);
-    right_back.setIdleMode(IdleMode.kBrake);
-    double factor = 0.118 * 2 * 3.14 * radius;
-    left_front.getEncoder().setPositionConversionFactor(factor);//feet = motor rotations * 0.118 ( wheel rotations / motor rotations) * (2*pi*radius / wheel rotation)
-    left_back.getEncoder().setPositionConversionFactor(factor);
-    right_front.getEncoder().setPositionConversionFactor(factor);
-    right_back.getEncoder().setPositionConversionFactor(factor);
-    speeds = new double[4];
-    ss = new double[2];
-
-    left_pidController = left_front.getPIDController();
-    left_encoder = left_front.getEncoder();
-    right_pidController = right_front.getPIDController();
-    right_encoder = right_front.getEncoder();
-
-    // PID coefficients
-    kP = 0.236;
-    kI = 0.847;
-    kD = 0.165; 
-    kIz = 0; 
-    kFF = 0.236; 
-    kMaxOutput = 1; 
-    kMinOutput = -1;
-    // Smart Motion Coefficients
+    else {
+      m_leftFrontMotor = null;
+      m_leftBackMotor = null;
+      m_rightFrontMotor = null;
+      m_rightBackMotor = null;
+      m_gyro = null;
+      m_odometry = null;
+      m_drive = null;
+      m_leftEncoder = null;
+      m_rightEncoder = null;
+    } 
     
-    maxVel = 20; // rpm
-    maxAcc = 15;
+  }
 
-    // set PID coefficients
-    left_pidController.setP(kP);
-    left_pidController.setI(kI);
-    left_pidController.setD(kD);
-    left_pidController.setIZone(kIz);
-    left_pidController.setFF(kFF);
-    left_pidController.setOutputRange(kMinOutput, kMaxOutput);
-    right_pidController.setP(kP);
-    right_pidController.setI(kI);
-    right_pidController.setD(kD);
-    right_pidController.setIZone(kIz);
-    right_pidController.setFF(kFF);
-    
-    right_pidController.setOutputRange(kMinOutput, kMaxOutput);
-
-    /**
-     * Smart Motion coefficients are set on a CANPIDController object
-     * 
-     * - setSmartMotionMaxVelocity() will limit the velocity in RPM of
-     * the pid controller in Smart Motion mode
-     * - setSmartMotionMinOutputVelocity() will put a lower bound in
-     * RPM of the pid controller in Smart Motion mode
-     * - setSmartMotionMaxAccel() will limit the acceleration in RPM^2
-     * of the pid controller in Smart Motion mode
-     * - setSmartMotionAllowedClosedLoopError() will set the max allowed
-     * error for the pid controller in Smart Motion mode
-     */
-    int smartMotionSlot = 0;
-   /* left_pidController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
-    left_pidController.setSmartMotionMinOutputVelocity(minVel, smartMotionSlot);
-    left_pidController.setSmartMotionMaxAccel(maxAcc, smartMotionSlot);
-    left_pidController.setSmartMotionAllowedClosedLoopError(allowedErr, smartMotionSlot);
-    right_pidController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
-    right_pidController.setSmartMotionMinOutputVelocity(minVel, smartMotionSlot);
-    right_pidController.setSmartMotionMaxAccel(maxAcc, smartMotionSlot);
-    right_pidController.setSmartMotionAllowedClosedLoopError(allowedErr, smartMotionSlot);
-*/
-    // display PID coefficients on SmartDashboard
-    SmartDashboard.putNumber("P Gain", kP);
-    SmartDashboard.putNumber("I Gain", kI);
-    SmartDashboard.putNumber("D Gain", kD);
-    SmartDashboard.putNumber("I Zone", kIz);
-    SmartDashboard.putNumber("Feed Forward", kFF);
-    SmartDashboard.putNumber("Max Output", kMaxOutput);
-    SmartDashboard.putNumber("Min Output", kMinOutput);
-
-    // display Smart Motion coefficients
-    SmartDashboard.putNumber("Max Velocity", maxVel);
-    SmartDashboard.putNumber("Min Velocity", minVel);
-    SmartDashboard.putNumber("Max Acceleration", maxAcc);
-    SmartDashboard.putNumber("Allowed Closed Loop Error", allowedErr);
-    SmartDashboard.putNumber("Set Position", 0);
-    SmartDashboard.putNumber("Set Velocity", 0);
-
-    // button to toggle between velocity and smart motion modes
-    SmartDashboard.putBoolean("Mode", true);
-  }
-  public void cheesyDrive(double speed, double turn, boolean quickTurn){
-    System.out.println("Power: "+speed+", turn: "+turn);
-    driveTrain.curvatureDrive(speed, turn, quickTurn);
-  }
-  public void setSpeedsTankDrive(double left, double right) {
-    System.out.println("Power: "+left+", "+right);
-    driveTrain.tankDrive(left, right);
-  }
-  double[] speeds;
-  public double[] getSpeeds_velocity(){
-    speeds[0] = left_front.getEncoder().getVelocity();
-    speeds[1] = left_back.getEncoder().getVelocity();
-    speeds[2] = right_front.getEncoder().getVelocity();
-    speeds[3] = right_back.getEncoder().getVelocity();
-    return speeds;
-  }
-  public double[] getSpeeds_voltage(){
-    speeds[0] = left_front.getBusVoltage();
-    speeds[1] = left_back.getBusVoltage();
-    speeds[2] = right_front.getBusVoltage();
-    speeds[3] = right_back.getBusVoltage();
-    return speeds;
-  }
-  public double[] getSpeeds_current(){
-    speeds[0] = left_front.getOutputCurrent();
-    speeds[1] = left_back.getOutputCurrent();
-    speeds[2] = right_front.getOutputCurrent();
-    speeds[3] = right_back.getOutputCurrent();
-    return speeds;
-  }
-  public double[] getSpeeds_encoder(){
-    speeds[0] = left_front.getEncoder().getPosition();
-    speeds[1] = left_back.getEncoder().getPosition();
-    speeds[2] = right_front.getEncoder().getPosition();
-    speeds[3] = right_back.getEncoder().getPosition();
-    return speeds;
-  }
-  public double getGyro(){
-    return 0;//gyro.getAngle();
-  }
-  double[] ss;
-  public double[] shooterSpeeds(){
-    ss[0] = 0;//left_shooter.getEncoder().getVelocity();
-    ss[1] = 0;//right_shooter.getEncoder().getVelocity();
-    return ss;
-  }
-  public void set(double x) {}
-  //@Override
-  public void aperiodic() {
-    // This method will be called once per scheduler run
-
-    // read PID coefficients from SmartDashboard
-    double p = SmartDashboard.getNumber("P Gain", 0);
-    double i = SmartDashboard.getNumber("I Gain", 0);
-    double d = SmartDashboard.getNumber("D Gain", 0);
-    double iz = SmartDashboard.getNumber("I Zone", 0);
-    double ff = SmartDashboard.getNumber("Feed Forward", 0);
-    double max = SmartDashboard.getNumber("Max Output", 0);
-    double min = SmartDashboard.getNumber("Min Output", 0);
-    double maxV = SmartDashboard.getNumber("Max Velocity", 0);
-    double minV = SmartDashboard.getNumber("Min Velocity", 0);
-    double maxA = SmartDashboard.getNumber("Max Acceleration", 0);
-    double allE = SmartDashboard.getNumber("Allowed Closed Loop Error", 0);
-
-    // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if((p != kP)) { left_pidController.setP(p); right_pidController.setP(p); kP = p; System.out.println("p"); }
-    if((i != kI)) { left_pidController.setI(i);right_pidController.setI(i); kI = i; System.out.println("i"); }
-    if((d != kD)) { left_pidController.setD(d);right_pidController.setD(d); kD = d; System.out.println("d"); }
-    if((iz != kIz)) { left_pidController.setIZone(iz);right_pidController.setIZone(iz); kIz = iz; }
-    if((ff != kFF)) { left_pidController.setFF(ff);right_pidController.setFF(ff); kFF = ff; }
-    if((max != kMaxOutput) || (min != kMinOutput)) { 
-      left_pidController.setOutputRange(min, max); right_pidController.setOutputRange(min, max); 
-      kMinOutput = min; kMaxOutput = max; 
-    }/*
-    if((maxV != maxVel)) { left_pidController.setSmartMotionMaxVelocity(maxV,0); maxVel = maxV; right_pidController.setSmartMotionMaxVelocity(maxV,0); }
-    if((minV != minVel)) { left_pidController.setSmartMotionMinOutputVelocity(minV,0); minVel = minV; right_pidController.setSmartMotionMinOutputVelocity(minV,0); }
-    if((maxA != maxAcc)) { left_pidController.setSmartMotionMaxAccel(maxA,0); maxAcc = maxA; right_pidController.setSmartMotionMaxAccel(maxA,0); }
-    if((allE != allowedErr)) { System.out.println("alle"); left_pidController.setSmartMotionAllowedClosedLoopError(allE,0); allowedErr = allE; right_pidController.setSmartMotionAllowedClosedLoopError(allE,0); }
-*/
-    double setPoint, processVariable;
-    boolean mode = SmartDashboard.getBoolean("Mode", false);
-    if(mode) {
-      setPoint = SmartDashboard.getNumber("Set Velocity", 0);
-      setPoint = -RobotContainer.driverJoystick.getRawAxis(1)*maxRPM;
-      double xSpeed = -RobotContainer.driverJoystick.getRawAxis(1);
-      double zRotation = RobotContainer.driverJoystick.getRawAxis(4);
-      boolean isQuickTurn = RobotContainer.driverJoystick.getRawButton(6);
-      curvatureDrive(xSpeed, zRotation, isQuickTurn, (l,r)->{
-        System.out.println("CD: "+l+", "+r);
-        left_pidController.setReference(l*maxRPM, ControlType.kVelocity); 
-        right_pidController.setReference(r*maxRPM, ControlType.kVelocity);
-      });
-      
-      //left_pidController.setReference(setPoint*maxRPM, ControlType.kVelocity); 
-      //right_pidController.setReference(setPoint*maxRPM, ControlType.kVelocity);
-      processVariable = left_encoder.getVelocity();
-    } else {
-      setPoint = SmartDashboard.getNumber("Set Position", 0);
-      setPoint = 5*RobotContainer.driverJoystick.getRawAxis(1);
-      left_pidController.setReference(setPoint, ControlType.kSmartMotion); right_pidController.setReference(setPoint, ControlType.kSmartMotion);
-      processVariable = left_encoder.getPosition();
+  @Override
+  public void periodic() {
+    // Update the odometry in the periodic block
+    if (DriveConstants.kHasDriveTrain) {
+      m_odometry.update(Rotation2d.fromDegrees(getHeading()), m_leftEncoder.getPosition(),-m_rightEncoder.getPosition());
     }
-    
-    SmartDashboard.putNumber("SetPoint", setPoint);
-    SmartDashboard.putNumber("Process Variable", processVariable);
-    SmartDashboard.putNumber("Output", left_front.getAppliedOutput());
   }
+
+  /**
+   * Returns the currently-estimated pose of the robot.
+   *
+   * @return The pose.
+   */
+  public Pose2d getPose() {
+    return m_odometry.getPoseMeters();
+  }
+
+  /**
+   * Returns the current wheel speeds of the robot.
+   *
+   * @return The current wheel speeds.
+   */
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    //System.out.println("Speeds: "+m_leftEncoder.getVelocity()+", "+m_rightEncoder.getVelocity());
+    //System.out.println("Current Pos("+getHeading()+"): "+m_leftEncoder.getPosition()+", "+m_rightEncoder.getPosition());
+    //TODO: Look into this, getRate vs getVelocity: m_leftEncoder.getRate()
+    return new DifferentialDriveWheelSpeeds(m_leftEncoder.getVelocity(), -m_rightEncoder.getVelocity());
+  }
+
+  /**
+   * Resets the odometry to the specified pose.
+   *
+   * @param pose The pose to which to set the odometry.
+   */
+  public void resetOdometry(Pose2d pose) {
+    resetEncoders();
+    m_odometry.resetPosition(pose, Rotation2d.fromDegrees(getHeading()));
+  }
+
+  /**
+   * Drives the robot using arcade controls.
+   *
+   * @param fwd the commanded forward movement
+   * @param rot the commanded rotation
+   */
+  public void arcadeDrive(double fwd, double rot) {
+    m_drive.arcadeDrive(fwd, rot);
+  }
+
+  public void calculateArcadeDrive(double xSpeed, double rot) {
+    var wheelSpeeds = DriveConstants.kDriveKinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0.0, rot));
+    setSpeeds(wheelSpeeds);
+  }
+  public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
+    double leftFeedforward = DriveConstants.kFeedforward.calculate(speeds.leftMetersPerSecond);
+    double rightFeedforward = DriveConstants.kFeedforward.calculate(speeds.rightMetersPerSecond);
+
+    double leftOutput = DriveConstants.kLeftPIDController.calculate(m_leftEncoder.getVelocity(),
+        speeds.leftMetersPerSecond);
+    double rightOutput = DriveConstants.kRightPIDController.calculate(-m_rightEncoder.getVelocity(),
+        speeds.rightMetersPerSecond);
+        System.out.println("L: "+speeds.leftMetersPerSecond+", R: "+speeds.rightMetersPerSecond+
+        ", FFL: "+leftFeedforward+", FFR: "+rightFeedforward+
+        ", LV: "+m_leftEncoder.getVelocity()+", RV: "+m_rightEncoder.getVelocity()+
+        ", LO: "+leftOutput+", RO: "+rightOutput);
+    
+    tankDriveVolts(leftOutput + leftFeedforward, rightOutput + rightFeedforward);
+  }
+
+  /**
+   * Controls the left and right sides of the drive directly with voltages.
+   *
+   * @param leftVolts  the commanded left output
+   * @param rightVolts the commanded right output
+   */
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    String debug = debug(leftVolts, rightVolts);
+    System.out.println(debug);
+    m_leftFrontMotor.setVoltage(leftVolts);
+    m_rightFrontMotor.setVoltage(-rightVolts);
+    m_drive.feed();
+  }
+
+  /**
+   * Resets the drive encoders to currently read a position of 0.
+   */
+  public void resetEncoders() {
+    m_leftEncoder.setPosition(0);
+    m_rightEncoder.setPosition(0);
+  }
+
+  /**
+   * Gets the average distance of the two encoders.
+   *
+   * @return the average of the two encoder readings
+   */
+  public double getAverageEncoderDistance() {
+    return (m_leftEncoder.getPosition() + -m_rightEncoder.getPosition()) / 2.0;
+  }
+
+  /**
+   * Sets the max output of the drive.  Useful for scaling the drive to drive more slowly.
+   *
+   * @param maxOutput the maximum output to which the drive will be constrained
+   */
+  public void setMaxOutput(double maxOutput) {
+    m_drive.setMaxOutput(maxOutput);
+  }
+
+  /**
+   * Zeroes the heading of the robot.
+   */
+  public void zeroHeading() {
+    m_gyro.reset();
+  }
+
+  /**
+   * Returns the heading of the robot.
+   *
+   * @return the robot's heading in degrees, from -180 to 180
+   */
+  public double getHeading() {
+    return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+  /**
+   * Returns the turn rate of the robot.
+   *
+   * @return The turn rate of the robot, in degrees per second
+   */
+  public double getTurnRate() {
+    return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  }
+
+  public String debug(double l, double r){
+    SmartDashboard.putNumber("Gyro", m_gyro.getAngle());
+    SmartDashboard.putNumber("OdoGyro", getHeading());
+    SmartDashboard.putNumber("Left Position", m_leftEncoder.getPosition());
+    SmartDashboard.putNumber("Right Position", -m_rightEncoder.getPosition());
+    SmartDashboard.putNumber("Left Velocity", m_leftEncoder.getVelocity());
+    SmartDashboard.putNumber("Right Velocity", -m_rightEncoder.getVelocity());
+    SmartDashboard.putNumber("Left Voltage", l);
+    SmartDashboard.putNumber("Right Voltage", r);
+    return String.format("Gyro(%f); OdoGyro(%f); Position(%f, %f); Velocity(%f, %f); Voltage(%f, %f);", 
+      m_gyro.getAngle(), getHeading(), m_leftEncoder.getPosition(), -m_rightEncoder.getPosition(),
+      m_leftEncoder.getVelocity(), -m_rightEncoder.getVelocity(), l, r
+    );
+  }
+
   public static final double kDefaultQuickStopThreshold = 0.2;
   public static final double kDefaultQuickStopAlpha = 0.1;
   public static final double kDefaultDeadband = 0.02;
@@ -323,11 +260,11 @@ public class DriveTrain extends SubsystemBase {
   private double m_quickStopAlpha = kDefaultQuickStopAlpha;
   private double m_quickStopAccumulator;
   protected double m_deadband = kDefaultDeadband;
-  public void curvatureDrive(double xSpeed, double zRotation, boolean isQuickTurn, TankDriver output) {
+  public void curvatureDrive(double xSpeed, double zRotation, boolean isQuickTurn, BiConsumer<Double, Double> output) {
     xSpeed = MathUtil.clamp(xSpeed, -1.0, 1.0);
-    xSpeed = applyDeadband(xSpeed, m_deadband);
+    xSpeed = Tools.applyDeadband(xSpeed, m_deadband);
     zRotation = MathUtil.clamp(zRotation, -1.0, 1.0);
-    zRotation = applyDeadband(zRotation, m_deadband);
+    zRotation = Tools.applyDeadband(zRotation, m_deadband);
     double angularPower;
     boolean overPower;
     if (isQuickTurn) {
@@ -375,36 +312,7 @@ public class DriveTrain extends SubsystemBase {
       leftMotorOutput /= maxMagnitude;
       rightMotorOutput /= maxMagnitude;
     }
-    output.set(leftMotorOutput, rightMotorOutput);
+    output.accept(leftMotorOutput, rightMotorOutput);
   }
-
-  public static double applyDeadband(double value, double deadband){
-    if (Math.abs(value) > deadband) {
-      if (value > 0.0) {
-        return (value - deadband) / (1.0 - deadband);
-      } else {
-        return (value + deadband) / (1.0 - deadband);
-      }
-    } else {
-      return 0.0;
-    }
-  }
-  public interface TankDriver{
-    public void set(double left, double right);
-  }
-
-  public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
-    final double leftFeedforward = m_feedforward.calculate(speeds.leftMetersPerSecond);
-    final double rightFeedforward = m_feedforward.calculate(speeds.rightMetersPerSecond);
-    final double leftOutput = m_leftPIDController.calculate(left_encoder.getVelocity(),
-        speeds.leftMetersPerSecond);
-    final double rightOutput = m_rightPIDController.calculate(right_encoder.getVelocity(),
-        speeds.rightMetersPerSecond);
-    left_front.setVoltage(leftOutput + leftFeedforward);
-    right_front.setVoltage(rightOutput + rightFeedforward);
-  }
-  public void drive(double xSpeed, double rot) {
-    var wheelSpeeds = m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0.0, rot));
-    setSpeeds(wheelSpeeds);
-  }
+  
 }

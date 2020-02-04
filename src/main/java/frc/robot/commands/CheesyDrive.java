@@ -18,7 +18,7 @@ public class CheesyDrive extends CommandBase {
   /**
    * Creates a new CheesyDrive.
    */
-  public CheesyDrive(DriveTrain newDriveTrain) {
+  public CheesyDrive(DriveTrain newDriveTrain, int a) {
     // Use addRequirements() here to declare subsystem dependencies.
     driveTrain = newDriveTrain;
     addRequirements(driveTrain);
@@ -44,35 +44,35 @@ public class CheesyDrive extends CommandBase {
          
 //RobotContainer.driverJoystick.getRawAxis(1)
 //RobotContainer.driverJoystick.getRawAxis(4)
-          driveTrain.cheesyDrive(deadzone(-RobotContainer.driverJoystick.getRawAxis(1)),deadzone( 
-          RobotContainer.driverJoystick.getRawAxis(4)), RobotContainer.driverJoystick.getRawButton(6));
+          //driveTrain.cheesyDrive(deadzone(-RobotContainer.driverJoystick.getRawAxis(1)),deadzone( 
+          //RobotContainer.driverJoystick.getRawAxis(4)), RobotContainer.driverJoystick.getRawButton(6));
         
     } break;
       case Turn: {
-        driveTrain.setSpeedsTankDrive(-(RobotContainer.driverJoystick.getRawButton(1)?1:0),(RobotContainer.driverJoystick.getRawButton(1)?1:0));
+        //driveTrain.setSpeedsTankDrive(-(RobotContainer.driverJoystick.getRawButton(1)?1:0),(RobotContainer.driverJoystick.getRawButton(1)?1:0));
       } break;
       case FullSpeed: {
-        double NEWPOWER = (RobotContainer.driverJoystick.getRawButton(1)?0.95:0);
+        double NEWPOWER = 0;//(RobotContainer.driverJoystick.getRawButton(1)?0.95:0);
 
         double change = NEWPOWER - oldOutput;
       change = Math.max(-limitChange, Math.min(change, limitChange));//clamp change
       oldOutput += change;
-        driveTrain.setSpeedsTankDrive(oldOutput,oldOutput);
+        //driveTrain.setSpeedsTankDrive(oldOutput,oldOutput);
       } break;
       case SlewLimit: {
         // Get the x speed. We are inverting this because Xbox controllers return
         // negative values when we push forward.
-        final var xSpeed = -driveTrain.speedLimiter.calculate(deadzone(-RobotContainer.driverJoystick.getRawAxis(1)))
-            * DriveTrain.maxSpeed;
+        //final var xSpeed = -driveTrain.speedLimiter.calculate(deadzone(-RobotContainer.driverJoystick.getRawAxis(1)))
+        //    * DriveTrain.maxSpeed;
         // Get the rate of angular rotation. We are inverting this because we want a
         // positive value when we pull to the left (remember, CCW is positive in
         // mathematics). Xbox controllers return positive values when you pull to
         // the right by default.
-        final var rot =
-            -driveTrain.rotationLimiter.calculate(deadzone(RobotContainer.driverJoystick.getRawAxis(4)))
-                * DriveTrain.kMaxAngularSpeed;
+        // final var rot =
+        //     -driveTrain.rotationLimiter.calculate(deadzone(RobotContainer.driverJoystick.getRawAxis(4)))
+        //         * DriveTrain.kMaxAngularSpeed;
 
-        driveTrain.drive(xSpeed, rot);
+        // driveTrain.drive(xSpeed, rot);
       } break;
     }
   }

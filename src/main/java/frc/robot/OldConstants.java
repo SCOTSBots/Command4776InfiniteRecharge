@@ -1,10 +1,3 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2018-2019 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
-
 package frc.robot;
 
 import com.revrobotics.ColorMatch;
@@ -16,72 +9,29 @@ import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.util.Color;
 
 /**
+ * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
+ * constants.  This class should not be used for any other purpose.  All constants should be
+ * declared globally (i.e. public static).  Do not put anything functional in this class.
  * The Constants class provides a convenient place for teams to hold robot-wide
  * numerical or boolean constants. This class should not be used for any other
  * purpose. All constants should be declared globally (i.e. public static). Do
  * not put anything functional in this class.
  *
+ * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * constants are needed, to reduce verbosity.
  * <p>
  * It is advised to statically import this class (or one of its inner classes)
  * wherever the constants are needed, to reduce verbosity.
  */
-public abstract class Constants {
-    public static enum RobotType {
-        CompBot,
-        PracticeBot,
-        KOPChassis,
-        TestBoard;
-    }
-    public static RobotType GenerateConstants(RobotType robot) {
-        switch (robot) {
-            case CompBot: {
-
-            } break;
-            case PracticeBot: {
-
-            } break;
-            case KOPChassis: {
-                DriveConstants.kHasDriveTrain = true;
-                DriveConstants.ksVolts = 0.146;
-                DriveConstants.kvVoltSecondsPerMeter = 2.17;
-                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.308;
-                DriveConstants.kPDriveVel = 2.59;
-                DriveConstants.kTrackwidthMeters = 0.66;
-                DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
-                    DriveConstants.kTrackwidthMeters);
-                DriveConstants.kFeedforward = new SimpleMotorFeedforward(
-                    DriveConstants.ksVolts,
-                    DriveConstants.kvVoltSecondsPerMeter,
-                    DriveConstants.kaVoltSecondsSquaredPerMeter);
-                DriveConstants.kLeftPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
-                DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
-                DriveConstants.kMaxSpeedMetersPerSecond = 3;
-                DriveConstants.kMaxAccelerationMetersPerSecondSquared = 3;
-                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 2 * Math.PI;
-                DriveConstants.kRamseteB = 2;
-                DriveConstants.kRamseteZeta = 0.7;
-                DriveConstants.kMaxRPM = 5700;
-                DriveConstants.kWheelDiameter = 0.152;
-                DriveConstants.kMotorGearsToWheelGears = 8.44;
-                DriveConstants.kRevolutionsToMeters = Math.PI * DriveConstants.kWheelDiameter / 8.44;
-                DriveConstants.kRPMtoMetersPerSecond = 
-                    Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
-                DriveConstants.kGyroReversed = true;
-                DriveConstants.kLeftMotor1Port = 4;
-                DriveConstants.kLeftMotor2Port = 5;
-                DriveConstants.kRightMotor1Port = 3;
-                DriveConstants.kRightMotor2Port = 6;
-            } break;
-            case TestBoard: {
-                DriveConstants.kHasDriveTrain = false;
-            } break;
-        }
-        return robot;
-    }
-    public static class DriveConstants {
-        public static boolean kHasDriveTrain = false;
-
-        // Feedforward constants
+public final class OldConstants {
+    public final static class DriveConstants {
+        // These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
+        // These characterization values MUST be determined either experimentally or
+        // theoretically
+        // for *your* robot's drive.
+        // The Robot Characterization Toolsuite provides a convenient tool for obtaining
+        // these
+        // values for your robot.
         public static double ksVolts = 0.146;
         public static double kvVoltSecondsPerMeter = 2.17;
         public static double kaVoltSecondsSquaredPerMeter = 0.308;
@@ -140,7 +90,6 @@ public abstract class Constants {
         public static final double kRamseteZeta = 0.7;
     }
     public static final class ControlPanelConstants {
-        public static boolean kHasControlPanel = false;
         //What I2C port to plug the REV Color Sensor V3 into
         public static I2C.Port kColorSensorPort = I2C.Port.kOnboard;
         public static int kWheelRotatorMotorPort = 7;

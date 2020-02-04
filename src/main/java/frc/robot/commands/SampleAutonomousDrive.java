@@ -11,6 +11,10 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DriveTrain;
 
+/**
+ * Deprecated!
+ */
+@Deprecated
 public class SampleAutonomousDrive extends CommandBase {
   DriveTrain driveTrain;
   Timer t;
@@ -35,13 +39,13 @@ public class SampleAutonomousDrive extends CommandBase {
   @Override
   public void execute() {
     double speed =0.95;
-    driveTrain.setSpeedsTankDrive(speed, speed);
+    //driveTrain.setSpeedsTankDrive(speed, speed);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    driveTrain.cheesyDrive(0, 0, false);
+    //driveTrain.cheesyDrive(0, 0, false);
   }
 
   // Returns true when the command should end.
