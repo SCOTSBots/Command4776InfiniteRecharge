@@ -30,7 +30,8 @@ public abstract class Constants {
         CompBot,
         PracticeBot,
         KOPChassis,
-        TestBoard;
+        TestBoard,
+        JeffBot;
     }
     public static RobotType GenerateConstants(RobotType robot) {
         switch (robot) {
@@ -42,6 +43,44 @@ public abstract class Constants {
             } break;
             case KOPChassis: {
                 DriveConstants.kHasDriveTrain = true;
+                DriveConstants.kHasGyro = true;
+                DriveConstants.kHasPixy = false;
+
+                DriveConstants.ksVolts = 0.146;
+                DriveConstants.kvVoltSecondsPerMeter = 2.17;
+                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.308;
+                DriveConstants.kPDriveVel = 2.59;
+                DriveConstants.kTrackwidthMeters = 0.66;
+                DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
+                    DriveConstants.kTrackwidthMeters);
+                DriveConstants.kFeedforward = new SimpleMotorFeedforward(
+                    DriveConstants.ksVolts,
+                    DriveConstants.kvVoltSecondsPerMeter,
+                    DriveConstants.kaVoltSecondsSquaredPerMeter);
+                DriveConstants.kLeftPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+                DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+                DriveConstants.kMaxSpeedMetersPerSecond = 3;
+                DriveConstants.kMaxAccelerationMetersPerSecondSquared = 3;
+                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 2 * Math.PI;
+                //DriveConstants.kRamseteB = 2;
+                //DriveConstants.kRamseteZeta = 0.7;
+                DriveConstants.kMaxRPM = 5700;
+                DriveConstants.kWheelDiameter = 0.152;
+                DriveConstants.kMotorGearsToWheelGears = 8.44;
+                DriveConstants.kRevolutionsToMeters = Math.PI * DriveConstants.kWheelDiameter / 8.44;
+                DriveConstants.kRPMtoMetersPerSecond = 
+                    Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
+                DriveConstants.kGyroReversed = true;
+                DriveConstants.kLeftMotor1Port = 4;
+                DriveConstants.kLeftMotor2Port = 5;
+                DriveConstants.kRightMotor1Port = 3;
+                DriveConstants.kRightMotor2Port = 6;
+            } break;
+            case JeffBot: {
+                DriveConstants.kHasDriveTrain = true;
+                DriveConstants.kHasGyro = false;
+                DriveConstants.kHasPixy = true;
+
                 DriveConstants.ksVolts = 0.146;
                 DriveConstants.kvVoltSecondsPerMeter = 2.17;
                 DriveConstants.kaVoltSecondsSquaredPerMeter = 0.308;
@@ -67,19 +106,23 @@ public abstract class Constants {
                 DriveConstants.kRPMtoMetersPerSecond = 
                     Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
                 DriveConstants.kGyroReversed = true;
-                DriveConstants.kLeftMotor1Port = 4;
-                DriveConstants.kLeftMotor2Port = 5;
-                DriveConstants.kRightMotor1Port = 3;
-                DriveConstants.kRightMotor2Port = 6;
+                DriveConstants.kLeftMotor1Port = 2;
+                DriveConstants.kLeftMotor2Port = 1;
+                DriveConstants.kRightMotor1Port = 4;
+                DriveConstants.kRightMotor2Port = 3;
             } break;
             case TestBoard: {
                 DriveConstants.kHasDriveTrain = false;
+                DriveConstants.kHasGyro = false;
+                DriveConstants.kHasPixy = false;
             } break;
         }
         return robot;
     }
     public static class DriveConstants {
         public static boolean kHasDriveTrain = false;
+        public static boolean kHasGyro = false;
+        public static boolean kHasPixy = false;
 
         // Feedforward constants
         public static double ksVolts = 0.146;

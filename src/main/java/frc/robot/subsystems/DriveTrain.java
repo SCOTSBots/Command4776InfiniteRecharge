@@ -7,6 +7,7 @@
 
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
 import java.util.function.BiConsumer;
 
 import com.revrobotics.CANEncoder;
@@ -29,6 +30,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.Tools;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.pixy.Pixy2;
+import frc.robot.pixy.Pixy2CCC;
+import frc.robot.pixy.Pixy2CCC.Block;
+import frc.robot.pixy.links.SPILink;
 
 public class DriveTrain extends SubsystemBase {
   // The motors on the left side of the drive.
@@ -36,6 +41,7 @@ public class DriveTrain extends SubsystemBase {
   private final CANSparkMax m_leftBackMotor ;
   private final CANSparkMax m_rightFrontMotor;
   private final CANSparkMax m_rightBackMotor;
+  private final Pixy2 pixy;
   
   // The robot's drive
   private final DifferentialDrive m_drive;
@@ -63,7 +69,6 @@ public class DriveTrain extends SubsystemBase {
       m_rightBackMotor = new CANSparkMax(DriveConstants.kRightMotor2Port, MotorType.kBrushless);
       m_rightEncoder = m_rightFrontMotor.getEncoder();
       m_leftEncoder = m_leftFrontMotor.getEncoder();
-      m_gyro = new ADXRS450_Gyro();
       m_drive = new DifferentialDrive(m_leftFrontMotor, m_rightFrontMotor);
   
       m_leftFrontMotor.restoreFactoryDefaults();
@@ -82,8 +87,6 @@ public class DriveTrain extends SubsystemBase {
       resetEncoders();
       m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()));
     
-      m_gyro.reset();
-  
       m_leftFrontMotor.setIdleMode(IdleMode.kBrake);
       m_leftBackMotor.setIdleMode(IdleMode.kBrake);
       m_rightFrontMotor.setIdleMode(IdleMode.kBrake);
@@ -94,20 +97,63 @@ public class DriveTrain extends SubsystemBase {
       m_leftBackMotor = null;
       m_rightFrontMotor = null;
       m_rightBackMotor = null;
-      m_gyro = null;
       m_odometry = null;
       m_drive = null;
       m_leftEncoder = null;
       m_rightEncoder = null;
     } 
+    if (DriveConstants.kHasGyro) {
+      m_gyro = new ADXRS450_Gyro();
+      m_gyro.reset();
+    }
+    else {
+      m_gyro = null;
+    }
+    if (DriveConstants.kHasPixy) {
+      pixy = Pixy2.createInstance(new SPILink());
+      pixy.init();
+      //pixy.setLamp((byte) 0, (byte) 0); // Turns the LEDs on
+      //pixy.setLED(200, 230, 30); // Sets the RGB LED to purple
+    }
+    else {
+      pixy = null;
+    }
     
   }
 
+  public Block getBiggestBlock() {
+    if (pixy == null)
+      return null;
+		// Gets the number of "blocks", identified targets, that match signature 1 on the Pixy2,
+		// does not wait for new data if none is available,
+		// and limits the number of returned blocks to 25, for a slight increase in efficiency
+		int blockCount = pixy.getCCC().getBlocks(false, Pixy2CCC.CCC_SIG1, 25);
+		System.out.println("Found " + blockCount + " blocks!"); // Reports number of blocks found
+		if (blockCount <= 0) {
+			return null; // If blocks were not found, stop processing
+		}
+		ArrayList<Block> blocks = pixy.getCCC().getBlocks(); // Gets a list of all blocks found by the Pixy2
+		Block largestBlock = null;
+		for (Block block : blocks) { // Loops through all blocks and finds the widest one
+			if (largestBlock == null) {
+				largestBlock = block;
+			} else if (block.getWidth() > largestBlock.getWidth()) {
+				largestBlock = block;
+			}
+		}
+		return largestBlock;
+  }
+  
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     if (DriveConstants.kHasDriveTrain) {
       m_odometry.update(Rotation2d.fromDegrees(getHeading()), m_leftEncoder.getPosition(),-m_rightEncoder.getPosition());
+    }
+    if (DriveConstants.kHasPixy) {
+      Block b = getBiggestBlock();
+      int pos = (b==null)?0:b.getX();
+      SmartDashboard.putNumber("Pixy", pos);
     }
   }
 
@@ -225,6 +271,8 @@ public class DriveTrain extends SubsystemBase {
    * @return the robot's heading in degrees, from -180 to 180
    */
   public double getHeading() {
+    if (m_gyro == null)
+      return 0;
     return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
@@ -234,20 +282,21 @@ public class DriveTrain extends SubsystemBase {
    * @return The turn rate of the robot, in degrees per second
    */
   public double getTurnRate() {
+    if (m_gyro == null)
+      return 0;
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
   public String debug(double l, double r){
-    SmartDashboard.putNumber("Gyro", m_gyro.getAngle());
-    SmartDashboard.putNumber("OdoGyro", getHeading());
+    SmartDashboard.putNumber("Gyro", getHeading());
     SmartDashboard.putNumber("Left Position", m_leftEncoder.getPosition());
     SmartDashboard.putNumber("Right Position", -m_rightEncoder.getPosition());
     SmartDashboard.putNumber("Left Velocity", m_leftEncoder.getVelocity());
     SmartDashboard.putNumber("Right Velocity", -m_rightEncoder.getVelocity());
     SmartDashboard.putNumber("Left Voltage", l);
     SmartDashboard.putNumber("Right Voltage", r);
-    return String.format("Gyro(%f); OdoGyro(%f); Position(%f, %f); Velocity(%f, %f); Voltage(%f, %f);", 
-      m_gyro.getAngle(), getHeading(), m_leftEncoder.getPosition(), -m_rightEncoder.getPosition(),
+    return String.format("Gyro(%f); Position(%f, %f); Velocity(%f, %f); Voltage(%f, %f);", 
+      getHeading(), m_leftEncoder.getPosition(), -m_rightEncoder.getPosition(),
       m_leftEncoder.getVelocity(), -m_rightEncoder.getVelocity(), l, r
     );
   }

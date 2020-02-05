@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import frc.robot.Constants.AutoConstants;
@@ -35,6 +36,7 @@ import frc.robot.Tools.Pair;
 import frc.robot.commands.CheesyDrive;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.SampleAutonomousDrive;
+import frc.robot.pixy.Pixy2CCC.Block;
 import frc.robot.subsystems.ControlPanelController;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.ExampleSubsystem;
@@ -97,13 +99,24 @@ public class RobotContainer {
     m_driveTrain.setDefaultCommand(
       //new CheesyDrive(driveTrain)
       new RunCommand(
-      ()->{},
-      m_driveTrain)
-    );
+      ()->{
+        Block b = m_driveTrain.getBiggestBlock();
+        int pos = (b==null)?150:b.getX();
+        double calculate = ((1.0*pos - 150.0)/150.0) / 1.0;
+        double turn = m_driverJoystick.getAButton()?(
+          calculate
+        ):m_driverJoystick.getX(GenericHID.Hand.kRight);
+        SmartDashboard.putNumber("POWER_PIXY", calculate);
+        m_driveTrain.curvatureDrive(
+          -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
+          turn, 
+          true||m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
+            m_driveTrain.tankDriveVolts(l*10, r*10);
+          });
+    },m_driveTrain));
     m_cpController.setDefaultCommand(new RunCommand(()->{
       m_cpController.set(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));
     },m_cpController));
-    
     //Set up Shuffleboard
     //Set up Driver Station Tab
     Shuffleboard.getTab("Drive").addPersistent("Max Speed", 1.0).withWidget(BuiltInWidgets.kNumberSlider)

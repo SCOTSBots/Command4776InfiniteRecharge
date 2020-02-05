@@ -80,6 +80,7 @@ public class ControlPanelController extends SubsystemBase {
   }
 
   public void set(double speed) {
-    m_wheelRotator.set(speed);
+    if (m_wheelRotator != null)
+      m_wheelRotator.set(speed);
   }
 }
