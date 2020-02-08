@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 /**
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -130,7 +131,20 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() throws IOException {
     // An ExampleCommand will run in autonomous
-    return MultiRamseteCommands("one","two");
+    return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
+    //return MultiRamseteCommands("DirectTrenchAuto","DirectTrenchPickup","one","three","superAuto");
+  }
+  SequentialCommandGroup MultiRamseteCommands (Map<String,Command> map) {
+    SequentialCommandGroup c = new SequentialCommandGroup();
+    map.forEach((json, cmd)->{
+      try {
+        c.addCommands(EasyRamseteCommand(json).getT1(), cmd);
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    });
+    return c;
   }
   private SequentialCommandGroup MultiRamseteCommands(String... files) throws IOException {
     SequentialCommandGroup c = new SequentialCommandGroup();
@@ -140,6 +154,7 @@ public class RobotContainer {
             System.out.println("Command \'"+s+"\' is now running at "+data.getT2().getInitialPose());
             m_driveTrain.resetOdometry(data.getT2().getInitialPose());
         }, m_driveTrain));
+        c.addCommands(new WaitCommand(3));
     }
     return c;
   }
