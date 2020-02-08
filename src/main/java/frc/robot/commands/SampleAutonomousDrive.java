@@ -39,7 +39,7 @@ public class SampleAutonomousDrive extends CommandBase {
   @Override
   public void execute() {
     double speed =0.95;
-    //driveTrain.setSpeedsTankDrive(speed, speed);
+    driveTrain.tankDriveVolts(speed*10, speed*10);
   }
 
   // Called once the command ends or is interrupted.

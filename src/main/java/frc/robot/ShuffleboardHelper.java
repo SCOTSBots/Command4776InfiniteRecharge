@@ -7,67 +7,33 @@
 
 package frc.robot;
 
-import java.util.List;
 import java.util.Map;
-import java.util.function.DoubleSupplier;
 
+import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 
 /**
- * A set of <b>handy</b> tools for using the Shuffleboard!
+ * A set of <i><b>handy</i></b> tools for using the Shuffleboard!
  */
 public class ShuffleboardHelper {
-    public void addLayout(String listName, Map<CANSparkMax,String> devices) {
-        //Map.of(devices.keySet().toArray()[3], "New Motor");
-        //add(Array<CANDevice.of(new CANDevice(0, null, null)));
-        CANSparkMax c = new CANSparkMax(0,MotorType.kBrushed);
+    /**
+     * This method adds a list of CANSparkMaxes (as a Map to give them names) to a layout that will automatically update their values
+     * @param listName The name of the layout/list to put the motors in (for organization, it is in its own layout)
+     * @param devices A map of devices and their names to put in the layout. Use <b>"Map.of()"</b> to create this.
+     */
+    public static void addSparkMaxLayout(String listName, Map<CANSparkMax,String> devices) {
         ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(listName, BuiltInLayouts.kList).withSize(4, 4).withPosition(0, 0);
-        
-        //Map.ofEntries(c,"");
-        //addLayout("New Tab", new CANSparkMax(0,MotorType.kBrushed), "", new CANSparkMax(0,MotorType.kBrushed), ""));
-        NetworkTableEntry[] entries = new NetworkTableEntry[devices.size()];
-        //devices.forEach((sparkMax, name) -> {});
-        int i = 0;
-        for (Map.Entry<CANSparkMax,String> sparkMax : devices.entrySet()) {
-            entries[i] = layout.add(sparkMax.getValue()+": Current", 0).getEntry();
-            i++;
-        }
-    //left_front_velocity = layout.add("Left Front Velocity", 0).getEntry();
-    }
-    class SparkMaxDebugger{
-        CANSparkMax sparkMax;
-        NetworkTableEntry velocityEntry;
-        NetworkTableEntry voltageEntry;
-        NetworkTableEntry currentEntry;
-        NetworkTableEntry positionEntry;
-        DoubleSupplier getVelocity;
-        DoubleSupplier getVoltage;
-        DoubleSupplier getCurrent;
-        DoubleSupplier getPosition;
-        public SparkMaxDebugger(CANSparkMax sparkMax, NetworkTableEntry velocityEntry, NetworkTableEntry voltageEntry,
-        NetworkTableEntry currentEntry, NetworkTableEntry positionEntry, DoubleSupplier getVelocity, DoubleSupplier getVoltage,
-        DoubleSupplier getCurrent, DoubleSupplier getPosition){
-            this.sparkMax = sparkMax;
-            this.velocityEntry = velocityEntry;
-            this.voltageEntry = voltageEntry;
-            this.currentEntry = currentEntry;
-            this.positionEntry = positionEntry;
-            getVelocity = sparkMax.getEncoder()::getVelocity;
-        }
-        public SparkMaxDebugger(CANSparkMax sparkMax){
-            this.sparkMax = sparkMax;
-            this.velocityEntry = velocityEntry;
-            this.voltageEntry = voltageEntry;
-            this.currentEntry = currentEntry;
-            this.positionEntry = positionEntry;
-            getVelocity = sparkMax.getEncoder()::getVelocity;
-        }
+        devices.forEach((sparkMax, name)->{
+            CANEncoder encoder = sparkMax.getEncoder();
+            layout.addNumber(name+": Position", encoder::getPosition);
+            layout.addNumber(name+": Velocity", encoder::getVelocity);
+            layout.addNumber(name+": Voltage", sparkMax::getBusVoltage);
+            layout.addNumber(name+": Current", sparkMax::getOutputCurrent);
+        });
     }
 }
 

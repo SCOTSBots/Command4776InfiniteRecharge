@@ -23,23 +23,16 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
+
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.Constants.RobotType;
 import frc.robot.Tools.Pair;
-import frc.robot.commands.CheesyDrive;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.commands.SampleAutonomousDrive;
 import frc.robot.pixy.Pixy2CCC.Block;
 import frc.robot.subsystems.ControlPanelController;
 import frc.robot.subsystems.DriveTrain;
-import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
@@ -53,8 +46,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  
-  private final RobotType robot = RobotType.TestBoard;
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_driveTrain = new DriveTrain();
   private final ControlPanelController m_cpController = new ControlPanelController();
@@ -63,23 +54,6 @@ public class RobotContainer {
   private final XboxController m_manipulatorJoystick = new XboxController(OIConstants.kManipulatorControllerPort);
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
-  NetworkTableEntry left_front_velocity;
-  NetworkTableEntry left_back_velocity;
-  NetworkTableEntry right_front_velocity;
-  NetworkTableEntry right_back_velocity;
-  NetworkTableEntry left_front_voltage;
-  NetworkTableEntry left_back_voltage;
-  NetworkTableEntry right_front_voltage;
-  NetworkTableEntry right_back_voltage;
-  NetworkTableEntry left_front_current;
-  NetworkTableEntry left_back_current;
-  NetworkTableEntry right_front_current;
-  NetworkTableEntry right_back_current;
-  NetworkTableEntry left_front_encoder;
-  NetworkTableEntry left_back_encoder;
-  NetworkTableEntry right_front_encoder;
-  NetworkTableEntry right_back_encoder;
-  NetworkTableEntry gyro;
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
@@ -106,11 +80,10 @@ public class RobotContainer {
         double turn = m_driverJoystick.getAButton()?(
           calculate
         ):m_driverJoystick.getX(GenericHID.Hand.kRight);
-        SmartDashboard.putNumber("POWER_PIXY", calculate);
         m_driveTrain.curvatureDrive(
           -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
           turn, 
-          true||m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
+          m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
             m_driveTrain.tankDriveVolts(l*10, r*10);
           });
     },m_driveTrain));
@@ -122,7 +95,6 @@ public class RobotContainer {
     Shuffleboard.getTab("Drive").addPersistent("Max Speed", 1.0).withWidget(BuiltInWidgets.kNumberSlider)
     .withProperties(Map.of("min",0,"max",1)).withSize(5, 2).withPosition(3, 2);
     //Set up sample NetworkEntry
-    NetworkTableEntry ne = Shuffleboard.getTab("Test Tab").add("Pi", 3.14).getEntry();
     //Set up sample command list
     
     ShuffleboardLayout commands = Shuffleboard.getTab("Test Tab").getLayout("Command List", BuiltInLayouts.kList).withSize(3, 5)
@@ -137,48 +109,6 @@ public class RobotContainer {
     
     //commands.add(new InstantCommand(() -> System.out.println("The OTHER New Command Pressed!")));
     Shuffleboard.getTab("Test Tab").add(m_driveTrain);
-    ShuffleboardLayout layout = Shuffleboard.getTab("Drive").getLayout("NEW Motor Speeds", BuiltInLayouts.kList).withSize(6, 8).withPosition(7, 3);
-    
-    left_front_velocity = layout.add("Left Front Velocity", 0).getEntry();
-    left_back_velocity = layout.add("Left Back Velocity", 0).getEntry();
-    right_front_velocity = layout.add("Right Front Velocity", 0).getEntry();
-    right_back_velocity = layout.add("Right Back Velocity", 0).getEntry();
-    left_front_voltage = layout.add("Left Front Voltage", 0).getEntry();
-    left_back_voltage = layout.add("Left Back Voltage", 0).getEntry();
-    right_front_voltage = layout.add("Right Front Voltage", 0).getEntry();
-    right_back_voltage = layout.add("Right Back Voltage", 0).getEntry();
-    left_front_current = layout.add("Left Front Current", 0).getEntry();
-    left_back_current = layout.add("Left Back Current", 0).getEntry();
-    right_front_current = layout.add("Right Front Current", 0).getEntry();
-    right_back_current = layout.add("Right Back Current", 0).getEntry();
-    left_front_encoder = layout.add("Left Front Encoder", 0).getEntry();
-    left_back_encoder = layout.add("Left Back Encoder", 0).getEntry();
-    right_front_encoder = layout.add("Right Front Encoder", 0).getEntry();
-    right_back_encoder = layout.add("Right Back Encoder", 0).getEntry();
-    gyro = layout.add("Gyro", 0).getEntry();
-  }
-  public void setData(){
-    double[] speeds={1,1,1,1};// = driveTrain.getSpeeds_velocity();
-    left_front_velocity.setNumber(speeds[0]);
-    left_back_velocity.setNumber(speeds[1]);
-    right_front_velocity.setNumber(speeds[2]);
-    right_back_velocity.setNumber(speeds[3]);
-    //speeds = driveTrain.getSpeeds_voltage();
-    left_front_voltage.setNumber(speeds[0]);
-    left_back_voltage.setNumber(speeds[1]);
-    right_front_voltage.setNumber(speeds[2]);
-    right_back_voltage.setNumber(speeds[3]);
-    //speeds = driveTrain.getSpeeds_current();
-    left_front_current.setNumber(speeds[0]);
-    left_back_current.setNumber(speeds[1]);
-    right_front_current.setNumber(speeds[2]);
-    right_back_current.setNumber(speeds[3]);
-    //speeds = driveTrain.getSpeeds_encoder();
-    left_front_encoder.setNumber(speeds[0]);
-    left_back_encoder.setNumber(speeds[1]);
-    right_front_encoder.setNumber(speeds[2]);
-    right_back_encoder.setNumber(speeds[3]);
-    //gyro.setNumber(driveTrain.getGyro());
   }
 
   /**

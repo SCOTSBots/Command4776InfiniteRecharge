@@ -8,6 +8,7 @@
 package frc.robot.subsystems;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import com.revrobotics.CANEncoder;
@@ -15,8 +16,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -28,6 +27,7 @@ import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
+import frc.robot.ShuffleboardHelper;
 import frc.robot.Tools;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.pixy.Pixy2;
@@ -63,6 +63,7 @@ public class DriveTrain extends SubsystemBase {
    */
   public DriveTrain() {
     if (DriveConstants.kHasDriveTrain) {
+      System.out.println("I have a drive train");
       m_leftFrontMotor = new CANSparkMax(DriveConstants.kLeftMotor1Port, MotorType.kBrushless);
       m_leftBackMotor = new CANSparkMax(DriveConstants.kLeftMotor2Port, MotorType.kBrushless);
       m_rightFrontMotor = new CANSparkMax(DriveConstants.kRightMotor1Port, MotorType.kBrushless);
@@ -91,8 +92,16 @@ public class DriveTrain extends SubsystemBase {
       m_leftBackMotor.setIdleMode(IdleMode.kBrake);
       m_rightFrontMotor.setIdleMode(IdleMode.kBrake);
       m_rightBackMotor.setIdleMode(IdleMode.kBrake);
+
+      ShuffleboardHelper.addSparkMaxLayout("Drive Train Motors", Map.of(
+        m_leftFrontMotor, "Left Front Motor",
+        m_leftBackMotor, "Left Back Motor",
+        m_rightFrontMotor, "Right Front Motor",
+        m_rightBackMotor, "Right Back Motor"
+      ));
     }
     else {
+      System.out.println("I DONT have a drive train");
       m_leftFrontMotor = null;
       m_leftBackMotor = null;
       m_rightFrontMotor = null;
@@ -128,7 +137,7 @@ public class DriveTrain extends SubsystemBase {
 		// does not wait for new data if none is available,
 		// and limits the number of returned blocks to 25, for a slight increase in efficiency
 		int blockCount = pixy.getCCC().getBlocks(false, Pixy2CCC.CCC_SIG1, 25);
-		System.out.println("Found " + blockCount + " blocks!"); // Reports number of blocks found
+		//System.out.println("Found " + blockCount + " blocks!"); // Reports number of blocks found
 		if (blockCount <= 0) {
 			return null; // If blocks were not found, stop processing
 		}
@@ -147,7 +156,7 @@ public class DriveTrain extends SubsystemBase {
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
-    if (DriveConstants.kHasDriveTrain) {
+    if (DriveConstants.kHasDriveTrain && DriveConstants.kHasGyro) {
       m_odometry.update(Rotation2d.fromDegrees(getHeading()), m_leftEncoder.getPosition(),-m_rightEncoder.getPosition());
     }
     if (DriveConstants.kHasPixy) {
@@ -172,9 +181,6 @@ public class DriveTrain extends SubsystemBase {
    * @return The current wheel speeds.
    */
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-    //System.out.println("Speeds: "+m_leftEncoder.getVelocity()+", "+m_rightEncoder.getVelocity());
-    //System.out.println("Current Pos("+getHeading()+"): "+m_leftEncoder.getPosition()+", "+m_rightEncoder.getPosition());
-    //TODO: Look into this, getRate vs getVelocity: m_leftEncoder.getRate()
     return new DifferentialDriveWheelSpeeds(m_leftEncoder.getVelocity(), -m_rightEncoder.getVelocity());
   }
 
