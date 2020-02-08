@@ -15,6 +15,10 @@ import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.ControlPanelConstants;
+import frc.robot.subsystems.ControlPanelController;
 
 /**
  * A set of <i><b>handy</i></b> tools for using the Shuffleboard!
@@ -26,7 +30,8 @@ public class ShuffleboardHelper {
      * @param devices A map of devices and their names to put in the layout. Use <b>"Map.of()"</b> to create this.
      */
     public static void addSparkMaxLayout(String listName, Map<CANSparkMax,String> devices) {
-        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(listName, BuiltInLayouts.kList).withSize(4, 4).withPosition(0, 0);
+        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(listName, BuiltInLayouts.kList)
+            .withSize(4, 4).withPosition(0, 0);
         devices.forEach((sparkMax, name)->{
             CANEncoder encoder = sparkMax.getEncoder();
             layout.addNumber(name+": Position", encoder::getPosition);
@@ -34,6 +39,39 @@ public class ShuffleboardHelper {
             layout.addNumber(name+": Voltage", sparkMax::getBusVoltage);
             layout.addNumber(name+": Current", sparkMax::getOutputCurrent);
         });
+    }
+
+    public static void addColorSensor(String name, ControlPanelController controller) {
+
+        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(name, BuiltInLayouts.kList)
+            .withSize(4, 7).withPosition(15, 0);//.withProperties(Map.of("Label position", "HIDDEN"));
+        
+        InstantCommand setRedColor = new InstantCommand(()->{
+            ControlPanelConstants.kRedTarget = controller.getColor();
+        },controller);
+        InstantCommand setGreenColor = new InstantCommand(()->{
+            ControlPanelConstants.kGreenTarget = controller.getColor();
+        },controller);
+        InstantCommand setBlueColor = new InstantCommand(()->{
+            ControlPanelConstants.kBlueTarget = controller.getColor();
+        },controller);
+        InstantCommand setYellowColor = new InstantCommand(()->{
+            ControlPanelConstants.kYellowTarget = controller.getColor();
+        },controller);
+        InstantCommand setValues = new InstantCommand(()->{
+            controller.setupColors();
+        },controller);
+        setRedColor.setName("Set Red Color");
+        setGreenColor.setName("Set Green Color");
+        setBlueColor.setName("Set Blue Color");
+        setYellowColor.setName("Set Yellow Color");
+        setValues.setName("Setup Colors");
+
+        layout.add(setRedColor);
+        layout.add(setGreenColor);
+        layout.add(setBlueColor);
+        layout.add(setYellowColor);
+        layout.add(setValues);
     }
 }
 

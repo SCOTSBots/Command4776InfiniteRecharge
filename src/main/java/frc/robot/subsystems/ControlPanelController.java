@@ -16,30 +16,46 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ControlPanelConstants;
 
 /**
  * The ControlPanelController subsystem controls the wheel rotator motor, color sensor, and servo rotator.
- * <p>Together, these three systems work to control the control panel as intended. 
+ * <p>Together, these three systems work to control the control panel as intended.
+ * <p><b>Note:</b> The order of the colors on the panel is <b>Red, Green, Blue, Yellow
  */
 public class ControlPanelController extends SubsystemBase {
   //Note: reading the color wheel works well, but for sensing balls in the intake, use Blue and Proximity.
   CANSparkMax m_wheelRotator;
   ColorSensorV3 m_colorSensor;
   ColorMatch m_colorMatcher;
+  int rotations;
+  ColorMatchResult oldColor;
 
   /**
    * Creates a new ControlPanelController.
    */
   public ControlPanelController() {
+    rotations = 0;
     if (ControlPanelConstants.kHasControlPanel) {
-      m_wheelRotator = new CANSparkMax(ControlPanelConstants.kWheelRotatorMotorPort, MotorType.kBrushless);
+      //m_wheelRotator = new CANSparkMax(ControlPanelConstants.kWheelRotatorMotorPort, MotorType.kBrushless);
       m_colorSensor = new ColorSensorV3(ControlPanelConstants.kColorSensorPort);
       m_colorMatcher = new ColorMatch();
       m_colorMatcher.addColorMatch(ControlPanelConstants.kBlueTarget);
       m_colorMatcher.addColorMatch(ControlPanelConstants.kGreenTarget);
       m_colorMatcher.addColorMatch(ControlPanelConstants.kRedTarget);
-      m_colorMatcher.addColorMatch(ControlPanelConstants.kYellowTarget); 
+      m_colorMatcher.addColorMatch(ControlPanelConstants.kYellowTarget);
+
+      ShuffleboardHelper.addColorSensor("Color Sensor", this);
+    }
+  }
+
+  public Color getColor() {
+    if (ControlPanelConstants.kHasControlPanel) {
+      return m_colorSensor.getColor();
+    }
+    else {
+      return ControlPanelConstants.kRedTarget;
     }
   }
 
@@ -82,5 +98,22 @@ public class ControlPanelController extends SubsystemBase {
   public void set(double speed) {
     if (m_wheelRotator != null)
       m_wheelRotator.set(speed);
+  }
+  public void setupColors() {
+    m_colorMatcher = new ColorMatch();
+    m_colorMatcher.addColorMatch(ControlPanelConstants.kBlueTarget);
+    m_colorMatcher.addColorMatch(ControlPanelConstants.kGreenTarget);
+    m_colorMatcher.addColorMatch(ControlPanelConstants.kRedTarget);
+    m_colorMatcher.addColorMatch(ControlPanelConstants.kYellowTarget);
+  }
+
+  public int getMiniRotations() {
+    if (!ControlPanelConstants.kHasControlPanel) return rotations;
+    ColorMatchResult newColor = m_colorMatcher.matchClosestColor(m_colorSensor.getColor());
+    if (oldColor == null) {
+
+    }
+    oldColor = newColor;
+    return rotations;
   }
 }

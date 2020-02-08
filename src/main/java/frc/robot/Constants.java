@@ -80,6 +80,7 @@ public abstract class Constants {
                 DriveConstants.kHasDriveTrain = true;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = true;
+                ControlPanelConstants.kHasControlPanel = true;
 
                 DriveConstants.ksVolts = 0.146;
                 DriveConstants.kvVoltSecondsPerMeter = 2.17;
@@ -189,9 +190,9 @@ public abstract class Constants {
         public static int kWheelRotatorMotorPort = 7;
 
         //These values have been calculated by REV Robotics
-        public static final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
-        public static final Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
-        public static final Color kRedTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
-        public static final Color kYellowTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
+        public static Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
+        public static Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
+        public static Color kRedTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
+        public static Color kYellowTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
     }
 }

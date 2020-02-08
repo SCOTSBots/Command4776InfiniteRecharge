@@ -92,23 +92,24 @@ public class RobotContainer {
     },m_cpController));
     //Set up Shuffleboard
     //Set up Driver Station Tab
-    Shuffleboard.getTab("Drive").addPersistent("Max Speed", 1.0).withWidget(BuiltInWidgets.kNumberSlider)
-    .withProperties(Map.of("min",0,"max",1)).withSize(5, 2).withPosition(3, 2);
+    //Shuffleboard.getTab("Drive").addPersistent("Max Speed", 1.0).withWidget(BuiltInWidgets.kNumberSlider)
+    //  .withProperties(Map.of("min",0,"max",1)).withSize(5, 2).withPosition(3, 2);
     //Set up sample NetworkEntry
     //Set up sample command list
     
-    ShuffleboardLayout commands = Shuffleboard.getTab("Test Tab").getLayout("Command List", BuiltInLayouts.kList).withSize(3, 5)
+    ShuffleboardLayout commands = Shuffleboard.getTab("Test Tab").getLayout("Limelight Command List", BuiltInLayouts.kList).withSize(3, 5)
     .withProperties(Map.of("Label position", "HIDDEN"));
     //Get the Network Table Entry that controls the LEDs on the limelight so we can turn them on/off
     NetworkTableEntry ledMode = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode");
+    //Get the Network Table Entry that controls the camera stream output see we can change the PnP
+    NetworkTableEntry stream = NetworkTableInstance.getDefault().getTable("limelight").getEntry("stream");
     //Make a command that inverts the leds on the limelight
-    InstantCommand c = new InstantCommand(()->ledMode.setDouble((ledMode.getDouble(0)==1)?0:1));
-    c.setName("Toggle LEDs");
-    commands.add(c);
-    
-    
-    //commands.add(new InstantCommand(() -> System.out.println("The OTHER New Command Pressed!")));
-    Shuffleboard.getTab("Test Tab").add(m_driveTrain);
+    InstantCommand LEDs = new InstantCommand(()->ledMode.setDouble((ledMode.getDouble(0)==1)?3:1));
+    InstantCommand CameraModes = new InstantCommand(()->stream.setDouble((stream.getDouble(0)==2)?1:2));
+    LEDs.setName("LED Mode");
+    CameraModes.setName("Camera Mode");
+    commands.add(LEDs);
+    commands.add(CameraModes);
   }
 
   /**
@@ -150,7 +151,6 @@ public class RobotContainer {
     return new Pair<Command, Trajectory>(new RamseteCommand(
         jsonTrajectory,
         m_driveTrain::getPose,
-        //disabledRamsete,
         new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
         new SimpleMotorFeedforward(DriveConstants.ksVolts,
                                    DriveConstants.kvVoltSecondsPerMeter,

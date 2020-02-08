@@ -63,7 +63,6 @@ public class DriveTrain extends SubsystemBase {
    */
   public DriveTrain() {
     if (DriveConstants.kHasDriveTrain) {
-      System.out.println("I have a drive train");
       m_leftFrontMotor = new CANSparkMax(DriveConstants.kLeftMotor1Port, MotorType.kBrushless);
       m_leftBackMotor = new CANSparkMax(DriveConstants.kLeftMotor2Port, MotorType.kBrushless);
       m_rightFrontMotor = new CANSparkMax(DriveConstants.kRightMotor1Port, MotorType.kBrushless);
@@ -101,7 +100,6 @@ public class DriveTrain extends SubsystemBase {
       ));
     }
     else {
-      System.out.println("I DONT have a drive train");
       m_leftFrontMotor = null;
       m_leftBackMotor = null;
       m_rightFrontMotor = null;
@@ -232,7 +230,7 @@ public class DriveTrain extends SubsystemBase {
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
     String debug = debug(leftVolts, rightVolts);
-    System.out.println(debug);
+    //System.out.println(debug);
     m_leftFrontMotor.setVoltage(leftVolts);
     m_rightFrontMotor.setVoltage(-rightVolts);
     m_drive.feed();
