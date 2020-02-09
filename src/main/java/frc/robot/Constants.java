@@ -86,6 +86,10 @@ public abstract class Constants {
                 DriveConstants.kRPMtoMetersPerSecond = 
                     Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
                 DriveConstants.kGyroReversed = true;
+
+
+                ShooterConstants.kMaxTurretAngle = 90;
+                ShooterConstants.kMinTurretAngle = -90;
             } break;
             case KOPChassis: {
                 DriveConstants.kHasDriveTrain = true;
@@ -163,6 +167,8 @@ public abstract class Constants {
                 DriveConstants.kHasDriveTrain = false;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = false;
+                ControlPanelConstants.kHasControlPanel = true;
+                ControlPanelConstants.kWheelRotatorMotorPort = 6;
             } break;
         }
         return robot;
@@ -241,6 +247,14 @@ public abstract class Constants {
         public static I2C.Port kColorSensorPort = I2C.Port.kOnboard;
         public static int kWheelRotatorMotorPort = 7;
 
+        public static double kSliceWidthCounts = 32;
+        public static double kRedColorDistanceThreshold = 0.17;
+        public static double kBlueColorDistanceThreshold = 0.17;
+        public static double kGreenColorDistanceThreshold = 0.07;
+        public static double kYellowColorDistanceThreshold = 0.17;
+        public static double kGotoPositionPower = 0.25;
+        public static double kRotatePower = 0.25;
+
         //These values have been calculated by REV Robotics
         public static Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
         public static Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
@@ -252,8 +266,16 @@ public abstract class Constants {
         
         public static int kShooterMotor1Port = 7;
         public static int kShooterMotor2Port = 7;
+        public static int kTurretMotorPort = 0;
         public static int kAngleScrewServoPort = 0;
         public static int kHoodAngleServoPort = 9;
+
+        public static double kP = 0.1;
+        public static double kFF = 0.05;
+        public static double kChassisMultiplier = 2.0;
+        public static double kAimingThreshold = 1.0;
+        public static double kMaxTurretAngle = 90.0;
+        public static double kMinTurretAngle = -90.0;
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;

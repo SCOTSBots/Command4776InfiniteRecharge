@@ -229,11 +229,13 @@ public class DriveTrain extends SubsystemBase {
    * @param rightVolts the commanded right output
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
-    String debug = debug(leftVolts, rightVolts);
-    //System.out.println(debug);
-    m_leftFrontMotor.setVoltage(leftVolts);
-    m_rightFrontMotor.setVoltage(-rightVolts);
-    m_drive.feed();
+    if (DriveConstants.kHasDriveTrain) {
+      String debug = debug(leftVolts, rightVolts);
+      //System.out.println(debug);
+      m_leftFrontMotor.setVoltage(leftVolts);
+      m_rightFrontMotor.setVoltage(-rightVolts);
+      m_drive.feed();
+    }
   }
 
   /**

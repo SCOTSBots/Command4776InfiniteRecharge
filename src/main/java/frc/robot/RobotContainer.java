@@ -16,11 +16,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
@@ -31,14 +31,18 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Tools.Pair;
 import frc.robot.pixy.Pixy2CCC.Block;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ControlPanelController;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -50,6 +54,10 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_driveTrain = new DriveTrain();
   private final ControlPanelController m_cpController = new ControlPanelController();
+  private final Climber m_climber = new Climber();
+  private final Intake m_intake = new Intake();
+  private final Shooter m_shooter = new Shooter();
+
   // The driver's controller
   private final XboxController m_driverJoystick = new XboxController(OIConstants.kDriverControllerPort);
   private final XboxController m_manipulatorJoystick = new XboxController(OIConstants.kManipulatorControllerPort);
@@ -61,36 +69,46 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
-
-    //Shuffleboard.getTab("Shooter").add(driveTrain.shooter);
-    ShuffleboardLayout servoLayout = Shuffleboard.getTab("Servo").getLayout("Servo Control", BuiltInLayouts.kList).withSize(3, 5);
-    NetworkTableEntry servoPosition = servoLayout.addPersistent("Servo Position", 0.0).withWidget(BuiltInWidgets.kNumberSlider)
-    .withProperties(Map.of("min",0,"max",1)).withSize(5, 2).withPosition(3, 2).getEntry();
     
-    //TODO: add this back: InstantCommand controlServo = new InstantCommand(()->driveTrain.set(servoPosition.getDouble(0.0)));
-    //controlServo.setName("Move Servo");
-    //servoLayout.add(controlServo);
-    //Shuffleboard.getTab("Shooter").add(driveTrain.servo);
-    m_driveTrain.setDefaultCommand(
-      //new CheesyDrive(driveTrain)
-      new RunCommand(
-      ()->{
-        Block b = m_driveTrain.getBiggestBlock();
-        int pos = (b==null)?150:b.getX();
-        double calculate = ((1.0*pos - 150.0)/150.0) / 1.0;
-        double turn = m_driverJoystick.getAButton()?(
-          calculate
-        ):m_driverJoystick.getX(GenericHID.Hand.kRight);
-        m_driveTrain.curvatureDrive(
-          -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
-          turn, 
-          m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
-            m_driveTrain.tankDriveVolts(l*10, r*10);
-          });
-    },m_driveTrain));
+    Runnable pixy = ()->{
+      Block b = m_driveTrain.getBiggestBlock();
+      int pos = (b==null)?150:b.getX();
+      double calculate = ((1.0*pos - 150.0)/150.0) / 1.0;
+      double turn = m_driverJoystick.getAButton()?(
+        calculate
+      ):m_driverJoystick.getX(GenericHID.Hand.kRight);
+      m_driveTrain.curvatureDrive(
+        -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
+        turn, 
+        m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
+          m_driveTrain.tankDriveVolts(l*10, r*10);
+        });
+    };
+    Runnable cheesyDrive = ()->{
+      double turn = m_driverJoystick.getX(GenericHID.Hand.kRight);
+      m_driveTrain.curvatureDrive(
+        -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
+        turn, 
+        m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
+          m_driveTrain.tankDriveVolts(l*10, r*10);
+        });
+    };
+    switch (OIConstants.teleop) {
+      case CheesyDrive:  
+        m_driveTrain.setDefaultCommand(new RunCommand(cheesyDrive,m_driveTrain));
+        break;
+      case PixyDrive:
+        m_driveTrain.setDefaultCommand(new RunCommand(pixy,m_driveTrain));
+        break;
+    }
     m_cpController.setDefaultCommand(new RunCommand(()->{
-      m_cpController.set(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));
+      //m_cpController.set(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));
     },m_cpController));
+    m_shooter.setDefaultCommand(new RunCommand(()->{
+      double turn = m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
+      m_shooter.rotate(turn);
+    }, m_shooter));
+
     //Set up Shuffleboard
     //Set up Driver Station Tab
     //Shuffleboard.getTab("Drive").addPersistent("Max Speed", 1.0).withWidget(BuiltInWidgets.kNumberSlider)
@@ -120,6 +138,17 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    //Override the driver's controls when the manipulator wants to turn the chassis while turning the turret
+    new JoystickButton(m_manipulatorJoystick, Button.kStickLeft.value).whileHeld(()->{
+      double turn = 10*m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
+      m_driveTrain.tankDriveVolts(turn, -turn);
+    }, m_driveTrain, m_shooter);
+
+    //Add A button - aims turret
+    new JoystickButton(m_manipulatorJoystick, Button.kA.value).whileHeld(()->{
+      double chassisTurn = 10 * m_shooter.AutoAimAndShoot();
+      m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
+    },m_shooter, m_driveTrain);
   }
 
 

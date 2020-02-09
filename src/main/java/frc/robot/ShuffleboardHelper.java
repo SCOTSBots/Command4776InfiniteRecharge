@@ -8,20 +8,27 @@
 package frc.robot;
 
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.ControlPanelConstants;
+import frc.robot.Tools.Toggle;
+import frc.robot.Tools.Toggleable;
 import frc.robot.subsystems.ControlPanelController;
 
 /**
  * A set of <i><b>handy</i></b> tools for using the Shuffleboard!
+ * 
  */
 public class ShuffleboardHelper {
     /**
@@ -73,5 +80,44 @@ public class ShuffleboardHelper {
         layout.add(setYellowColor);
         layout.add(setValues);
     }
-}
 
+    public static void AddToggle(String listName, String name, Toggleable<Integer> toggleable) {
+        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(listName, BuiltInLayouts.kList)
+            .withSize(4, 4).withPosition(20, 0);
+        toggleable.init();
+        InstantCommand c = new InstantCommand(toggleable::toggle);
+        c.setName(name);
+        layout.add(c);
+    }
+    public static void AddToggle(String listName, String name, Consumer<Integer> output, Toggle<Integer> toggle) {
+        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(listName, BuiltInLayouts.kList)
+            .withSize(4, 4).withPosition(20, 0);
+        InstantCommand c = new InstantCommand(()->{
+            output.accept(toggle.swap());
+        });
+        c.setName(name);
+        layout.add(c);
+    }
+
+    public static void AddOutput(String name, int min, int max, DoubleConsumer output, Sendable... commands) {
+        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(name, BuiltInLayouts.kList).withSize(3, 5);
+        NetworkTableEntry position = layout.addPersistent("Output", 0.0).withWidget(BuiltInWidgets.kNumberSlider)
+            .withProperties(Map.of("min",min,"max",max)).withSize(5, 2).withPosition(25, 0).getEntry();
+        InstantCommand setOutput = new InstantCommand(()->{
+            System.out.println("Value is now "+position.getDouble(0.0));
+            output.accept(position.getDouble(0.0));
+        });
+        setOutput.setName("Set Output");
+        layout.add(setOutput);
+        InstantCommand zero = new InstantCommand(()->{
+            output.accept(0);
+            System.out.println("Zeroed the output.");
+            //position.setNumber(0);
+        });
+        zero.setName("Zero Output");
+        layout.add(zero);
+        for(Sendable c : commands) {
+            layout.add(c);
+        }
+    }
+}
