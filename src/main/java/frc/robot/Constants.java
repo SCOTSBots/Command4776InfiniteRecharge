@@ -39,7 +39,53 @@ public abstract class Constants {
 
             } break;
             case PracticeBot: {
+                DriveConstants.kHasDriveTrain = true;
+                DriveConstants.kHasGyro = false;
+                DriveConstants.kHasPixy = false;
 
+                //CAN WIRING:
+                ShooterConstants.kShooterMotor1Port = 7;
+                ShooterConstants.kShooterMotor2Port = 7;
+                ShooterConstants.kAngleScrewServoPort = 0; //PWM, not CAN
+                ShooterConstants.kHoodAngleServoPort = 9; //PWM, not CAN
+                DriveConstants.kLeftMotor1Port = 4;
+                DriveConstants.kLeftMotor2Port = 5;
+                DriveConstants.kRightMotor1Port = 3;
+                DriveConstants.kRightMotor2Port = 6;
+                IntakeConstants.kIntakeMotorPort = 7;
+                IntakeConstants.kConveyorMotor1Port = 7;
+                IntakeConstants.kConveyorMotor2Port = 7;
+                ClimberConstants.kClimberMotor1Port = 7;
+                ClimberConstants.kClimberMotor2Port = 7;
+                ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
+                ControlPanelConstants.kWheelRotatorMotorPort = 7;
+
+
+                DriveConstants.ksVolts = 0.146;
+                DriveConstants.kvVoltSecondsPerMeter = 2.17;
+                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.308;
+                DriveConstants.kPDriveVel = 2.59;
+                DriveConstants.kTrackwidthMeters = 0.66;
+                DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
+                    DriveConstants.kTrackwidthMeters);
+                DriveConstants.kFeedforward = new SimpleMotorFeedforward(
+                    DriveConstants.ksVolts,
+                    DriveConstants.kvVoltSecondsPerMeter,
+                    DriveConstants.kaVoltSecondsSquaredPerMeter);
+                DriveConstants.kLeftPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+                DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+                DriveConstants.kMaxSpeedMetersPerSecond = 3;
+                DriveConstants.kMaxAccelerationMetersPerSecondSquared = 3;
+                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 2 * Math.PI;
+                //DriveConstants.kRamseteB = 2;
+                //DriveConstants.kRamseteZeta = 0.7;
+                DriveConstants.kMaxRPM = 5700;
+                DriveConstants.kWheelDiameter = 0.152;
+                DriveConstants.kMotorGearsToWheelGears = 8.44;
+                DriveConstants.kRevolutionsToMeters = Math.PI * DriveConstants.kWheelDiameter / 8.44;
+                DriveConstants.kRPMtoMetersPerSecond = 
+                    Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
+                DriveConstants.kGyroReversed = true;
             } break;
             case KOPChassis: {
                 DriveConstants.kHasDriveTrain = true;
@@ -81,6 +127,7 @@ public abstract class Constants {
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = true;
                 ControlPanelConstants.kHasControlPanel = true;
+                ShooterConstants.kHasShooter = true;
 
                 DriveConstants.ksVolts = 0.146;
                 DriveConstants.kvVoltSecondsPerMeter = 2.17;
@@ -173,6 +220,11 @@ public abstract class Constants {
     public static final class OIConstants {
         public static final int kDriverControllerPort = 0;
         public static final int kManipulatorControllerPort = 1;
+        public static enum Teleop {
+            CheesyDrive,
+            PixyDrive
+        }
+        public static Teleop teleop = Teleop.CheesyDrive;
     }
     
     public static final class AutoConstants {
@@ -194,5 +246,26 @@ public abstract class Constants {
         public static Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
         public static Color kRedTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
         public static Color kYellowTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
+    }
+    public static final class ShooterConstants {
+        public static boolean kHasShooter = false;
+        
+        public static int kShooterMotor1Port = 7;
+        public static int kShooterMotor2Port = 7;
+        public static int kAngleScrewServoPort = 0;
+        public static int kHoodAngleServoPort = 9;
+    }
+    public static final class IntakeConstants {
+        public static boolean kHasIntake = false;
+        
+        public static int kIntakeMotorPort = 7;
+        public static int kConveyorMotor1Port = 7;
+        public static int kConveyorMotor2Port = 7;
+    }
+    public static final class ClimberConstants {
+        public static boolean kHasClimber = false;
+        
+        public static int kClimberMotor1Port = 7;
+        public static int kClimberMotor2Port = 7;
     }
 }
