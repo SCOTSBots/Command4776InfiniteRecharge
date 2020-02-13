@@ -60,7 +60,7 @@ public class Shooter extends SubsystemBase {
       turretMotor.setIdleMode(IdleMode.kBrake);
       turretEncoder = turretMotor.getEncoder();
 
-      hoodAngleServo = new Servo(ShooterConstants.kHoodAngleServoPort);
+      hoodAngleServo = new Servo(ShooterConstants.kHoodAngleServo1Port);
       //angleScrewServo = new Servo(ShooterConstants.kAngleScrewServoPort);
 
       //Get the Network Tables for the limelight

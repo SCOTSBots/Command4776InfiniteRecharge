@@ -169,8 +169,8 @@ public class RobotContainer {
       try {
         c.addCommands(EasyRamseteCommand(json).getT1(), cmd);
       } catch (IOException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
+        System.out.println("There was an error reading the file \'"+json+".wpilib.json\'!!!!!");
       }
     });
     return c;

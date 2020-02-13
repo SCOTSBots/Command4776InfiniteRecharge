@@ -42,23 +42,30 @@ public abstract class Constants {
                 DriveConstants.kHasDriveTrain = true;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = false;
+                ControlPanelConstants.kHasControlPanel = false;
+                ClimberConstants.kHasClimber = false;
+                IntakeConstants.kHasIntake = false;
+                ShooterConstants.kHasShooter = false;
 
                 //CAN WIRING:
-                ShooterConstants.kShooterMotor1Port = 7;
-                ShooterConstants.kShooterMotor2Port = 7;
-                ShooterConstants.kAngleScrewServoPort = 0; //PWM, not CAN
-                ShooterConstants.kHoodAngleServoPort = 9; //PWM, not CAN
-                DriveConstants.kLeftMotor1Port = 4;
-                DriveConstants.kLeftMotor2Port = 5;
-                DriveConstants.kRightMotor1Port = 3;
-                DriveConstants.kRightMotor2Port = 6;
-                IntakeConstants.kIntakeMotorPort = 7;
-                IntakeConstants.kConveyorMotor1Port = 7;
-                IntakeConstants.kConveyorMotor2Port = 7;
-                ClimberConstants.kClimberMotor1Port = 7;
-                ClimberConstants.kClimberMotor2Port = 7;
+                ShooterConstants.kShooterMotor1Port = 9;
+                ShooterConstants.kShooterMotor2Port = 18;
+                ShooterConstants.kHoodAngleServo1Port = 1; //PWM, not CAN
+                ShooterConstants.kHoodAngleServo2Port = 2; //PWM, not CAN
+                ShooterConstants.kTurretMotorPort = 11;
+                DriveConstants.kLeftMotor1Port = 12;
+                DriveConstants.kLeftMotor2Port = 15;
+                DriveConstants.kRightMotor1Port = 13;
+                DriveConstants.kRightMotor2Port = 14;
+                IntakeConstants.kIntakeFlipMotor1Port = 3;
+                IntakeConstants.kIntakeFlipMotor2Port = 10;
+                IntakeConstants.kIntakeMotorPort = 4;
+                IntakeConstants.kConveyorMotor1Port = 8;
+                IntakeConstants.kConveyorMotor2Port = 5;
+                ClimberConstants.kClimberMotor1Port = 16;
+                ClimberConstants.kClimberMotor2Port = 17;
+                ControlPanelConstants.kWheelRotatorMotorPort = 6;
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
-                ControlPanelConstants.kWheelRotatorMotorPort = 7;
 
 
                 DriveConstants.ksVolts = 0.146;
@@ -167,7 +174,7 @@ public abstract class Constants {
                 DriveConstants.kHasDriveTrain = false;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = false;
-                ControlPanelConstants.kHasControlPanel = true;
+                ControlPanelConstants.kHasControlPanel = false;
                 ControlPanelConstants.kWheelRotatorMotorPort = 6;
             } break;
         }
@@ -268,7 +275,8 @@ public abstract class Constants {
         public static int kShooterMotor2Port = 7;
         public static int kTurretMotorPort = 0;
         public static int kAngleScrewServoPort = 0;
-        public static int kHoodAngleServoPort = 9;
+        public static int kHoodAngleServo1Port = 9;
+        public static int kHoodAngleServo2Port = 9;
 
         public static double kP = 0.1;
         public static double kFF = 0.05;
@@ -280,6 +288,8 @@ public abstract class Constants {
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
         
+        public static int kIntakeFlipMotor1Port = 7;
+        public static int kIntakeFlipMotor2Port = 7;
         public static int kIntakeMotorPort = 7;
         public static int kConveyorMotor1Port = 7;
         public static int kConveyorMotor2Port = 7;
