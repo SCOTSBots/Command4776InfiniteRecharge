@@ -7,45 +7,49 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.ControlPanelController;
 
-/**
- * Deprecated!
- */
-@Deprecated
-public class SampleAutonomousDrive extends CommandBase {
-  DriveTrain driveTrain;
-  Timer t;
+public class CalibrateColorSliceCounts extends CommandBase {
+  ControlPanelController cpc;
+  double startCount;
+  double deltaCounts;
+  Color oldColor;
   /**
-   * Creates a new SampleAutonomousDrive.
+   * Creates a new CalibrateColorSliceCounts.
    */
-  public SampleAutonomousDrive(DriveTrain dt) {
-    // Use addRequirements() here to declare subsystem dependencies.
-    driveTrain = dt;
-    addRequirements(driveTrain);
-    t = new Timer();
+  public CalibrateColorSliceCounts(ControlPanelController cpc) {
+    this.cpc = cpc;
+    addRequirements(cpc);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    t.reset();
-    t.start();
+    startCount = cpc.getCounts();
+    oldColor = cpc.getEstimatedColor().color;
+    cpc.set(0.25);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double speed =0.95;
-    driveTrain.tankDriveVolts(speed*10, speed*10);
+    Color newColor = cpc.getEstimatedColor().color;
+    if (newColor != oldColor) {
+      double currentCounts = cpc.getCounts();
+      deltaCounts = currentCounts - startCount;
+      startCount = currentCounts;
+      SmartDashboard.putNumber("Delta Counts", deltaCounts);
+    }
+    oldColor = newColor;
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    //driveTrain.cheesyDrive(0, 0, false);
+    cpc.set(0);
   }
 
   // Returns true when the command should end.
