@@ -13,6 +13,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -24,8 +25,10 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.SampleAutonomousDrive;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.SmartMotion;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -34,10 +37,12 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private final SmartMotion m_neo550TSmartMotion = new SmartMotion();
   public enum RobotType{
     KOP,
     WC,
-    Jeff
+    Jeff,
+    PracticeBot;
   }
   private final RobotType robot = RobotType.KOP;
   // The robot's subsystems and commands are defined here...
@@ -83,14 +88,19 @@ public class RobotContainer {
     NetworkTableEntry ne = Shuffleboard.getTab("Test Tab").add("Pi", 3.14).getEntry();
     //Set up sample command list
     
-    ShuffleboardLayout commands = Shuffleboard.getTab("Test Tab").getLayout("Command List", BuiltInLayouts.kList).withSize(3, 5)
+    ShuffleboardLayout commands = Shuffleboard.getTab("Camera Streams").getLayout("Command List", BuiltInLayouts.kList).withSize(3, 5)
     .withProperties(Map.of("Label position", "HIDDEN"));
     //Get the Network Table Entry that controls the LEDs on the limelight so we can turn them on/off
     NetworkTableEntry ledMode = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode");
+    NetworkTableEntry stream = NetworkTableInstance.getDefault().getTable("limelight").getEntry("stream");
     //Make a command that inverts the leds on the limelight
-    InstantCommand c = new InstantCommand(()->ledMode.setDouble((ledMode.getDouble(0)==1)?0:1));
+    InstantCommand c = new InstantCommand(()->ledMode.setDouble((((ledMode.getDouble(0)==1)?0:1))));
     c.setName("Toggle LEDs");
     commands.add(c);
+    InstantCommand toggleStreamMode = new InstantCommand(()->stream.setDouble((stream.getDouble(0)==1)?0:1));
+    toggleStreamMode.setName("Toggle stream mode");
+    commands.add(toggleStreamMode);
+    System.out.println((stream.getDouble(0)==1)?0:1);
     
     
     //commands.add(new InstantCommand(() -> System.out.println("The OTHER New Command Pressed!")));
@@ -137,6 +147,9 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    XboxController m_XboxController = new XboxController(2);
+    new JoystickButton(m_XboxController, Button.kA.value)
+      .whenPressed(new InstantCommand());
   }
 
 

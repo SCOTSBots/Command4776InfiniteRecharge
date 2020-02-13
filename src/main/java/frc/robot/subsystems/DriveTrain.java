@@ -11,6 +11,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
@@ -28,7 +29,13 @@ public class DriveTrain extends SubsystemBase {
   CANSparkMax mleft_front;
   CANSparkMax mleft_back;
   CANSparkMax mright_front;
-  CANSparkMax mright_back;
+  CANSparkMax mright_back;  
+  CANSparkMax melevator1;
+  CANSparkMax melevator2;
+  CANSparkMax mshooter1;
+  CANSparkMax mshooter2;
+  CANSparkMax mturretRotate;
+  //hood used two servos
   private DifferentialDrive driveTrain;
   //public Servo servo
   /**
@@ -38,20 +45,20 @@ public class DriveTrain extends SubsystemBase {
     switch (robot){
       case Jeff: {
         gyro = new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
-        mleft_front = new CANSparkMax(4, MotorType.kBrushless);
-        mleft_back = new CANSparkMax(5, MotorType.kBrushless);
-        mright_front = new CANSparkMax(3, MotorType.kBrushless);
-        mright_back = new CANSparkMax(6, MotorType.kBrushless);
+        mleft_front = new CANSparkMax(2, MotorType.kBrushless);
+        mleft_back = new CANSparkMax(1, MotorType.kBrushless);
+        mright_front = new CANSparkMax(4, MotorType.kBrushless);
+        mright_back = new CANSparkMax(3, MotorType.kBrushless);
         driveTrain = new DifferentialDrive(
           new SpeedControllerGroup(mleft_front, mleft_back), 
           new SpeedControllerGroup(mright_front, mright_back));
       } break;
       case WC: {
         gyro = null;//new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
-        mleft_front = new CANSparkMax(4, MotorType.kBrushless);
-        mleft_back = new CANSparkMax(5, MotorType.kBrushless);
-        mright_front = new CANSparkMax(3, MotorType.kBrushless);
-        mright_back = new CANSparkMax(6, MotorType.kBrushless);
+        mleft_front = new CANSparkMax(8, MotorType.kBrushless);
+        mleft_back = new CANSparkMax(10, MotorType.kBrushless);
+        mright_front = new CANSparkMax(7, MotorType.kBrushless);
+        mright_back = new CANSparkMax(9, MotorType.kBrushless);
         driveTrain = new DifferentialDrive(
           new SpeedControllerGroup(mleft_front, mleft_back), 
           new SpeedControllerGroup(mright_front, mright_back));
@@ -66,6 +73,21 @@ public class DriveTrain extends SubsystemBase {
           new SpeedControllerGroup(mleft_front, mleft_back), 
           new SpeedControllerGroup(mright_front, mright_back));
       } break;
+      case PracticeBot: {
+        mleft_front = new CANSparkMax(0, MotorType.kBrushless);
+        mleft_front = new CANSparkMax(0, MotorType.kBrushless);
+        mright_front = new CANSparkMax(0, MotorType.kBrushless);
+        mright_back = new CANSparkMax(0, MotorType.kBrushless);
+        melevator1 = new CANSparkMax(0, MotorType.kBrushless);
+        melevator2 = new CANSparkMax(0, MotorType.kBrushless);
+        mshooter1 = new CANSparkMax(0, MotorType.kBrushless);
+        mshooter2 = new CANSparkMax(0, MotorType.kBrushless);
+        mturretRotate = new CANSparkMax(0, MotorType.kBrushless);
+        driveTrain = new DifferentialDrive(
+          new SpeedControllerGroup(mleft_front, mleft_back),
+          new SpeedControllerGroup(mright_front, mright_back));
+
+      } break;
       default: {
 
       }
@@ -75,11 +97,11 @@ public class DriveTrain extends SubsystemBase {
   }
   public void cheesyDrive(double speed, double turn, boolean quickTurn){
     System.out.println("Power: "+speed);
-    driveTrain.curvatureDrive(speed, turn, quickTurn);
+    driveTrain.curvatureDrive(speed, turn, quickTurn);  
   }
-  public void setSpeedsTankDrive(double left, double right) {
-    System.out.println("Power: "+left+", "+right);
-    driveTrain.tankDrive(left, right);
+  public void setSpeedsTankDrive(double d, double e) {
+    //System.out.println("Power: "+left+", "+right);
+    driveTrain.tankDrive(d, e);
   }
   double[] speeds;
   public double[] getSpeeds_velocity(){

@@ -19,7 +19,7 @@ public class CheesyDrive extends CommandBase {
   public CheesyDrive(DriveTrain newDriveTrain) {
     // Use addRequirements() here to declare subsystem dependencies.
     driveTrain = newDriveTrain;
-    addRequirements(driveTrain);
+    addRequirements(driveTrain);  
   }
 
   // Called when the command is initially scheduled.
@@ -45,9 +45,11 @@ public class CheesyDrive extends CommandBase {
       case FullSpeed: {
         driveTrain.setSpeedsTankDrive((RobotContainer.driverJoystick.getRawButton(1)?1:0),(RobotContainer.driverJoystick.getRawButton(1)?1:0));
       } break;
+      
+      }
     }
     
-  }
+  
 
   // Called once the command ends or is interrupted.
   @Override

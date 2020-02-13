@@ -2,6 +2,7 @@ import org.gradle.internal.os.OperatingSystem
 
 pluginManagement {
     repositories {
+        maven { url 'https://nexus.otake.pw/repository/maven-public/' }
         mavenLocal()
         gradlePluginPortal()
         String frcYear = '2020'
