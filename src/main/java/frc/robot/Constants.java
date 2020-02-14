@@ -57,7 +57,6 @@ public abstract class Constants {
                 IntakeConstants.kConveyorMotor2Port = 8;
                 ClimberConstants.kClimberMotor1Port = 16;
                 ClimberConstants.kClimberMotor2Port = 17;
-                ClimberConstants.kControlPanelMotorPort = 6;
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
                 ControlPanelConstants.kWheelRotatorMotorPort = 7;
 
