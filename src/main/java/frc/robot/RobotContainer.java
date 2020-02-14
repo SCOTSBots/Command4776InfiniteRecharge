@@ -35,6 +35,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ControlPanelController;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LEDController;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -57,6 +58,7 @@ public class RobotContainer {
   private final Climber m_climber = new Climber();
   private final Intake m_intake = new Intake();
   private final Shooter m_shooter = new Shooter();
+  private final LEDController m_leds = new LEDController();
 
   // The driver's controller
   private final XboxController m_driverJoystick = new XboxController(OIConstants.kDriverControllerPort);

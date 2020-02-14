@@ -171,11 +171,15 @@ public abstract class Constants {
                 DriveConstants.kRightMotor2Port = 3;
             } break;
             case TestBoard: {
+                LEDConstants.kHasLEDs = true;
+                ShooterConstants.kHasShooter = false;
                 DriveConstants.kHasDriveTrain = false;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = false;
                 ControlPanelConstants.kHasControlPanel = false;
                 ControlPanelConstants.kWheelRotatorMotorPort = 6;
+                ShooterConstants.kHoodAngleServo1Port = 9;
+
             } break;
         }
         return robot;
@@ -299,5 +303,8 @@ public abstract class Constants {
         
         public static int kClimberMotor1Port = 7;
         public static int kClimberMotor2Port = 7;
+    }
+    public static final class LEDConstants {
+        public static boolean kHasLEDs = false;
     }
 }
