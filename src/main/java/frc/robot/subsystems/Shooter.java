@@ -9,8 +9,6 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -33,8 +31,8 @@ public class Shooter extends SubsystemBase {
   CANSparkMax turretMotor;
   CANEncoder turretEncoder;
 
-  Servo hoodAngleServo;
-  Servo angleScrewServo;
+  Servo hoodAngleServo1;
+  Servo hoodAngleServo2;
 
   NetworkTableEntry LEDMode;
   NetworkTableEntry cameraMode;
@@ -50,18 +48,18 @@ public class Shooter extends SubsystemBase {
    */
   public Shooter() {
     if (ShooterConstants.kHasShooter) {
-      //shooterMotor1 = new CANSparkMax(ShooterConstants.kShooterMotor1Port, MotorType.kBrushless);
-      //shooterMotor2 = new CANSparkMax(ShooterConstants.kShooterMotor2Port, MotorType.kBrushless);
-      //shooterMotor1.setIdleMode(IdleMode.kCoast);
-      //shooterMotor2.setIdleMode(IdleMode.kCoast);
-      //shooterMotor2.follow(shooterMotor1);
+      // shooterMotor1 = new CANSparkMax(ShooterConstants.kShooterMotor1Port, MotorType.kBrushless);
+      // shooterMotor2 = new CANSparkMax(ShooterConstants.kShooterMotor2Port, MotorType.kBrushless);
+      // shooterMotor1.setIdleMode(IdleMode.kCoast);
+      // shooterMotor2.setIdleMode(IdleMode.kCoast);
+      // shooterMotor2.follow(shooterMotor1);
       
-      turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
-      turretMotor.setIdleMode(IdleMode.kBrake);
-      turretEncoder = turretMotor.getEncoder();
+      // turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
+      // turretMotor.setIdleMode(IdleMode.kBrake);
+      // turretEncoder = turretMotor.getEncoder();
 
-      hoodAngleServo = new Servo(ShooterConstants.kHoodAngleServoPort);
-      //angleScrewServo = new Servo(ShooterConstants.kAngleScrewServoPort);
+      hoodAngleServo1 = new Servo(ShooterConstants.kHoodAngleServo1Port);
+      // hoodAngleServo2 = new Servo(ShooterConstants.kHoodAngleServo2Port);
 
       //Get the Network Tables for the limelight
       table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -76,9 +74,8 @@ public class Shooter extends SubsystemBase {
 
       //ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
       ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, (x)->{
-        System.out.println("Servo output set to "+x);
-        hoodAngleServo.set(x);
-        System.out.println("Servo is actually at "+hoodAngleServo.get());
+        hoodAngleServo1.set(x);
+        //hoodAngleServo2.set(x);
       });
 
       tv = table.getEntry("tv");
@@ -126,7 +123,6 @@ public class Shooter extends SubsystemBase {
   double encoderToDegrees(double counts) {
     return counts;
   }
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run

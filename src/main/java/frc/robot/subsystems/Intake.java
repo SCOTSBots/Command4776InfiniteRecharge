@@ -10,6 +10,8 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.Ultrasonic.Unit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 
@@ -17,7 +19,7 @@ public class Intake extends SubsystemBase {
   CANSparkMax intakeMotor;
   CANSparkMax conveyorMotor1;
   CANSparkMax conveyorMotor2;
-
+  Ultrasonic sonic;
   /**
    * Creates a new Intake.
    */
@@ -27,6 +29,11 @@ public class Intake extends SubsystemBase {
       conveyorMotor1 = new CANSparkMax(IntakeConstants.kConveyorMotor1Port, MotorType.kBrushless);
       conveyorMotor2 = new CANSparkMax(IntakeConstants.kConveyorMotor2Port, MotorType.kBrushless);
     }
+    sonic = new Ultrasonic(5, 4, Unit.kInches);
+    sonic.setAutomaticMode(true);
+    //Shuffleboard.getTab("Test Tabe").addNumber("US Distance", sonic::getRangeInches);
+  
+    //Shuffleboard.getTab("Example tab").add(sonic);
   }
 
   public void powerIntake(double power) {
@@ -40,6 +47,6 @@ public class Intake extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
+    // System.out.println("US: "+sonic.getRangeInches());
   }
 }
