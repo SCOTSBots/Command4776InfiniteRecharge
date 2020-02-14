@@ -44,19 +44,20 @@ public abstract class Constants {
                 DriveConstants.kHasPixy = false;
 
                 //CAN WIRING:
-                ShooterConstants.kShooterMotor1Port = 7;
-                ShooterConstants.kShooterMotor2Port = 7;
+                ShooterConstants.kShooterMotor1Port = 9;
+                ShooterConstants.kShooterMotor2Port = 18;
                 ShooterConstants.kAngleScrewServoPort = 0; //PWM, not CAN
                 ShooterConstants.kHoodAngleServoPort = 9; //PWM, not CAN
-                DriveConstants.kLeftMotor1Port = 4;
-                DriveConstants.kLeftMotor2Port = 5;
-                DriveConstants.kRightMotor1Port = 3;
-                DriveConstants.kRightMotor2Port = 6;
-                IntakeConstants.kIntakeMotorPort = 7;
-                IntakeConstants.kConveyorMotor1Port = 7;
-                IntakeConstants.kConveyorMotor2Port = 7;
-                ClimberConstants.kClimberMotor1Port = 7;
-                ClimberConstants.kClimberMotor2Port = 7;
+                DriveConstants.kLeftMotor1Port = 12;
+                DriveConstants.kLeftMotor2Port = 15;
+                DriveConstants.kRightMotor1Port = 13;
+                DriveConstants.kRightMotor2Port = 14;
+                IntakeConstants.kIntakeMotorPort = 4;
+                IntakeConstants.kConveyorMotor1Port = 5;
+                IntakeConstants.kConveyorMotor2Port = 8;
+                ClimberConstants.kClimberMotor1Port = 16;
+                ClimberConstants.kClimberMotor2Port = 17;
+                ClimberConstants.kControlPanelMotorPort = 6;
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
                 ControlPanelConstants.kWheelRotatorMotorPort = 7;
 
