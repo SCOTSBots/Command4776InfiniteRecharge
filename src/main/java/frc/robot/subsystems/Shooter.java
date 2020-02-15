@@ -75,11 +75,11 @@ public class Shooter extends SubsystemBase {
       ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", stream::setDouble, new Toggle<Integer>(1, 2));
 
       //ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
-      ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, (x)->{
+      ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, (x)->{
         hoodAngleServo1.set(x);
         //hoodAngleServo2.set(x);
       });
-      ShuffleboardHelper.AddOutput("Turret Power", 0, 1, (x)->{
+      ShuffleboardHelper.AddOutput(this, "Turret Power", 0, 1, (x)->{
         System.out.println("Set power for "+x);
         turretMotor.set(x);
       });

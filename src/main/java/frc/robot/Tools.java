@@ -189,6 +189,17 @@ public class Tools {
       }
       return BaseColor.Unknown;
     }
+
+    public static BaseColor robotColorToSensorColor(BaseColor currentColor) {
+      switch (currentColor) {
+        case Red: return BaseColor.Blue;
+        case Green: return BaseColor.Yellow;
+        case Blue: return BaseColor.Red;
+        case Yellow: return BaseColor.Green;
+        case Unknown: return BaseColor.Unknown;
+      }
+      return BaseColor.Unknown;
+    }
   
   }
 

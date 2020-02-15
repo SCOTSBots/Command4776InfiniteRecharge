@@ -30,12 +30,12 @@ public class CalibrateColorSliceCounts extends CommandBase {
   public void initialize() {
     startCount = cpc.getCounts();
     oldColor = cpc.getEstimatedColor().color;
-    cpc.set(0.25);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    cpc.setWheelSpeed(0.25);
     Color newColor = cpc.getEstimatedColor().color;
     if (newColor != oldColor) {
       double currentCounts = cpc.getCounts();
@@ -49,7 +49,6 @@ public class CalibrateColorSliceCounts extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    cpc.set(0);
   }
 
   // Returns true when the command should end.

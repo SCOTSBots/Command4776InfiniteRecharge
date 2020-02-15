@@ -329,7 +329,7 @@ public abstract class Constants {
             ColorShim.kGreen, 
             ColorShim.kYellow,
         };
-        public static Color[] kRandom = {
+        public static Color[] kRandomSequence = {
             ColorShim.kRed,
             ColorShim.kWhite, 
             ColorShim.kBlue,

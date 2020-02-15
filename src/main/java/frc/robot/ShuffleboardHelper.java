@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.ControlPanelConstants;
 import frc.robot.Tools.DataTools.Toggle;
 import frc.robot.Tools.DataTools.Toggleable;
@@ -99,21 +100,21 @@ public class ShuffleboardHelper {
         layout.add(c);
     }
 
-    public static void AddOutput(String name, int min, int max, DoubleConsumer output, Sendable... commands) {
+    public static void AddOutput(Subsystem subsystem, String name, int min, int max, DoubleConsumer output, Sendable... commands) {
         ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(name, BuiltInLayouts.kList).withSize(3, 5);
         NetworkTableEntry position = layout.addPersistent("Output", 0.0).withWidget(BuiltInWidgets.kNumberSlider)
             .withProperties(Map.of("min",min,"max",max)).withSize(5, 2).withPosition(25, 0).getEntry();
         InstantCommand setOutput = new InstantCommand(()->{
-            System.out.println("Value is now "+position.getDouble(0.0));
+            //System.out.println("Value is now "+position.getDouble(0.0));
             output.accept(position.getDouble(0.0));
-        });
+        }, subsystem);
         setOutput.setName("Set Output");
         layout.add(setOutput);
         InstantCommand zero = new InstantCommand(()->{
             output.accept(0);
             System.out.println("Zeroed the output.");
             //position.setNumber(0);
-        });
+        }, subsystem);
         zero.setName("Zero Output");
         layout.add(zero);
         for(Sendable c : commands) {

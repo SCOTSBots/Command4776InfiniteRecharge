@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ControlPanelConstants;
+import frc.robot.Tools.ColorTools;
 import frc.robot.Tools.ColorTools.BaseColor;
 import frc.robot.commands.CalibrateColorSliceCounts;
 import frc.robot.commands.ControlPanelGotoColor;
@@ -72,11 +73,11 @@ public class ControlPanelController extends SubsystemBase {
       ControlPanelRotate rotate = new ControlPanelRotate(this);
       rotate.setName("Rotate 3 to 5");
 
-      ShuffleboardHelper.AddOutput("Control CP Wheel ("+ControlPanelConstants.kWheelRotatorMotorPort+")",
-       -1, 1, this::set, gotoYellow, gotoRed, gotoBlue, gotoGreen, ccsc, rotate);
+      ShuffleboardHelper.AddOutput(this, "Control CP Wheel ("+ControlPanelConstants.kWheelRotatorMotorPort+")",
+       -1, 1, this::setWheelSpeed, gotoYellow, gotoRed, gotoBlue, gotoGreen, ccsc, rotate);
     }
   }
-  public BaseColor getBaseColor() {
+  public BaseColor getBaseColorOnSensor() {
     if (!ControlPanelConstants.kHasControlPanel) return BaseColor.Unknown;
     Color detectedColor = m_colorSensor.getColor();
       /**
@@ -85,27 +86,23 @@ public class ControlPanelController extends SubsystemBase {
       ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
 
       if (match.color == ControlPanelConstants.kBlueTarget) {
-        return BaseColor.Blue;
+        return ColorTools.robotColorToSensorColor(BaseColor.Blue);
       } else if (match.color == ControlPanelConstants.kRedTarget) {
-        return BaseColor.Red;
+        return ColorTools.robotColorToSensorColor(BaseColor.Red);
       } else if (match.color == ControlPanelConstants.kGreenTarget) {
-        return BaseColor.Green;
+        return ColorTools.robotColorToSensorColor(BaseColor.Green);
       } else if (match.color == ControlPanelConstants.kYellowTarget) {
-        return BaseColor.Yellow;
+        return ColorTools.robotColorToSensorColor(BaseColor.Yellow);
       } else {
         return BaseColor.Unknown;
       }
-  }
-  double x = 0;
-  public void set(double in) {
-    x = in;
   }
   public Color getColor() {
     if (ControlPanelConstants.kHasControlPanel) {
       return m_colorSensor.getColor();
     }
     else {
-      return ControlPanelConstants.kRedTarget;
+      return null;//ControlPanelConstants.kRedTarget;
     }
   }
   public ColorMatchResult getEstimatedColor() {
@@ -117,10 +114,13 @@ public class ControlPanelController extends SubsystemBase {
     }
   }
 
+  public void setWheelSpeed(double speed) {
+    m_wheelRotatorMotor.set(speed);
+  }
+
   @Override
   public void periodic() {
     if (ControlPanelConstants.kHasControlPanel) {
-      m_wheelRotatorMotor.set(x);
       // This method will be called once per scheduler run
       Color detectedColor = m_colorSensor.getColor();
       /**

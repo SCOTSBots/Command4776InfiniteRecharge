@@ -36,16 +36,16 @@ public class ControlPanelRotate extends CommandBase {
   public void initialize() {
     slices = 0;
     power = ControlPanelConstants.kRotatePower;
-    cpc.set(power);
-    oldColor = cpc.getBaseColor();
+    oldColor = cpc.getBaseColorOnSensor();
     counterClockWise = power < 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    cpc.setWheelSpeed(power);
 
-    BaseColor currentColor = cpc.getBaseColor();
+    BaseColor currentColor = cpc.getBaseColorOnSensor();
     BaseColor usedToBe = ColorTools.rotateColor(currentColor, counterClockWise, true);
     if (usedToBe == oldColor && currentColor != oldColor) {
       slices++;
@@ -57,7 +57,6 @@ public class ControlPanelRotate extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    cpc.set(0);
   }
 
   // Returns true when the command should end.

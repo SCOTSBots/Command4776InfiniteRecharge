@@ -37,27 +37,26 @@ public class ControlPanelGotoColor extends CommandBase {
   @Override
   public void initialize() {
     colorReady = false;
-    cpc.set(power);
-    oldColor = cpc.getBaseColor();
+    oldColor = cpc.getBaseColorOnSensor();
     counterClockWise = power < 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    cpc.setWheelSpeed(power);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    cpc.set(0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
     if (!colorReady) {
-        BaseColor currentColor = cpc.getBaseColor();
+        BaseColor currentColor = cpc.getBaseColorOnSensor();
         BaseColor usedToBe = ColorTools.rotateColor(currentColor, counterClockWise, true);
         if (currentColor == targetColor && (oldColor == currentColor || usedToBe == oldColor)) {
         startPos = cpc.getCounts();
