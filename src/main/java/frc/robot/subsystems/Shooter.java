@@ -9,6 +9,8 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -16,7 +18,7 @@ import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ShooterConstants;
-import frc.robot.Tools.Toggle;
+import frc.robot.Tools.DataTools.Toggle;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.networktables.NetworkTable;
@@ -54,11 +56,11 @@ public class Shooter extends SubsystemBase {
       // shooterMotor2.setIdleMode(IdleMode.kCoast);
       // shooterMotor2.follow(shooterMotor1);
       
-      // turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
-      // turretMotor.setIdleMode(IdleMode.kBrake);
-      // turretEncoder = turretMotor.getEncoder();
+      turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
+      turretMotor.setIdleMode(IdleMode.kBrake);
+      turretEncoder = turretMotor.getEncoder();
 
-      hoodAngleServo1 = new Servo(ShooterConstants.kHoodAngleServo1Port);
+      // hoodAngleServo1 = new Servo(ShooterConstants.kHoodAngleServo1Port);
       // hoodAngleServo2 = new Servo(ShooterConstants.kHoodAngleServo2Port);
 
       //Get the Network Tables for the limelight
@@ -76,6 +78,10 @@ public class Shooter extends SubsystemBase {
       ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, (x)->{
         hoodAngleServo1.set(x);
         //hoodAngleServo2.set(x);
+      });
+      ShuffleboardHelper.AddOutput("Turret Power", 0, 1, (x)->{
+        System.out.println("Set power for "+x);
+        turretMotor.set(x);
       });
 
       tv = table.getEntry("tv");

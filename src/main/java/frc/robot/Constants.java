@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.ColorShim;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -173,11 +174,13 @@ public abstract class Constants {
                 LEDConstants.kHasLEDs = true;
                 ShooterConstants.kHasShooter = false;
                 DriveConstants.kHasDriveTrain = false;
+                IntakeConstants.kHasIntake = false;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = false;
                 ControlPanelConstants.kHasControlPanel = false;
                 ControlPanelConstants.kWheelRotatorMotorPort = 6;
                 ShooterConstants.kHoodAngleServo1Port = 9;
+                ShooterConstants.kTurretMotorPort = 11;
 
             } break;
         }
@@ -305,5 +308,34 @@ public abstract class Constants {
     }
     public static final class LEDConstants {
         public static boolean kHasLEDs = false;
+        public static int kLEDCount = 72;
+        public static int kLEDPWMPort = 6;
+
+        public static Color[] kRainbowSequence = {
+            ColorShim.kRed,
+            ColorShim.kOrange,
+            ColorShim.kYellow,
+            ColorShim.kGreen,
+            ColorShim.kBlue,
+            ColorShim.kPurple
+        };
+        public static Color[] kAmericaSequence = {
+            ColorShim.kRed, 
+            ColorShim.kWhite, 
+            ColorShim.kBlue
+        };
+        public static Color[] kMainlyGreen = {
+            ColorShim.kGreen, 
+            ColorShim.kGreen, 
+            ColorShim.kYellow,
+        };
+        public static Color[] kRandom = {
+            ColorShim.kRed,
+            ColorShim.kWhite, 
+            ColorShim.kBlue,
+            ColorShim.kGreen,
+            ColorShim.kYellow,
+            ColorShim.kOrange,
+        };
     }
 }

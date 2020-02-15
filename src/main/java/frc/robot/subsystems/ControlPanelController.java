@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ControlPanelConstants;
-import frc.robot.Tools.BaseColor;
+import frc.robot.Tools.ColorTools.BaseColor;
 import frc.robot.commands.CalibrateColorSliceCounts;
 import frc.robot.commands.ControlPanelGotoColor;
 import frc.robot.commands.ControlPanelRotate;

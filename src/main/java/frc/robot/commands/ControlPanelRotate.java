@@ -9,9 +9,9 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.Tools;
 import frc.robot.Constants.ControlPanelConstants;
-import frc.robot.Tools.BaseColor;
+import frc.robot.Tools.ColorTools.BaseColor;
+import frc.robot.Tools.ColorTools;
 import frc.robot.subsystems.ControlPanelController;
 
 public class ControlPanelRotate extends CommandBase {
@@ -46,7 +46,7 @@ public class ControlPanelRotate extends CommandBase {
   public void execute() {
 
     BaseColor currentColor = cpc.getBaseColor();
-    BaseColor usedToBe = Tools.rotateColor(currentColor, counterClockWise, true);
+    BaseColor usedToBe = ColorTools.rotateColor(currentColor, counterClockWise, true);
     if (usedToBe == oldColor && currentColor != oldColor) {
       slices++;
     }

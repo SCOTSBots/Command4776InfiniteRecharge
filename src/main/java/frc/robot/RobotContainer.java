@@ -25,11 +25,10 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
-
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.Tools.Pair;
+import frc.robot.Tools.DataTools.Pair;
 import frc.robot.pixy.Pixy2CCC.Block;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ControlPanelController;
@@ -110,6 +109,7 @@ public class RobotContainer {
       double turn = m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
       m_shooter.rotate(turn);
     }, m_shooter));
+    
 
     //Set up Shuffleboard
     //Set up Driver Station Tab
@@ -140,6 +140,13 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    new JoystickButton(m_driverJoystick, Button.kA.value).whenPressed(()->{
+      m_leds.sections[0].disturb(0);
+    });
+    new JoystickButton(m_driverJoystick, Button.kB.value).whenPressed(()->{
+      m_leds.sections[0].clearDisturbances();
+    });
+
     //Override the driver's controls when the manipulator wants to turn the chassis while turning the turret
     new JoystickButton(m_manipulatorJoystick, Button.kStickLeft.value).whileHeld(()->{
       double turn = 10*m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
@@ -151,6 +158,7 @@ public class RobotContainer {
       double chassisTurn = 10 * m_shooter.AutoAimAndShoot();
       m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
     },m_shooter, m_driveTrain);
+
   }
 
 

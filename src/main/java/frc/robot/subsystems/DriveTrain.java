@@ -30,6 +30,7 @@ import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Tools;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Tools.MathTools;
 import frc.robot.pixy.Pixy2;
 import frc.robot.pixy.Pixy2CCC;
 import frc.robot.pixy.Pixy2CCC.Block;
@@ -317,9 +318,9 @@ public class DriveTrain extends SubsystemBase {
   protected double m_deadband = kDefaultDeadband;
   public void curvatureDrive(double xSpeed, double zRotation, boolean isQuickTurn, BiConsumer<Double, Double> output) {
     xSpeed = MathUtil.clamp(xSpeed, -1.0, 1.0);
-    xSpeed = Tools.applyDeadband(xSpeed, m_deadband);
+    xSpeed = MathTools.applyDeadband(xSpeed, m_deadband);
     zRotation = MathUtil.clamp(zRotation, -1.0, 1.0);
-    zRotation = Tools.applyDeadband(zRotation, m_deadband);
+    zRotation = MathTools.applyDeadband(zRotation, m_deadband);
     double angularPower;
     boolean overPower;
     if (isQuickTurn) {

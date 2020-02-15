@@ -22,8 +22,8 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.ControlPanelConstants;
-import frc.robot.Tools.Toggle;
-import frc.robot.Tools.Toggleable;
+import frc.robot.Tools.DataTools.Toggle;
+import frc.robot.Tools.DataTools.Toggleable;
 import frc.robot.subsystems.ControlPanelController;
 
 /**
