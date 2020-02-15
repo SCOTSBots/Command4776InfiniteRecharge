@@ -57,13 +57,15 @@ public abstract class Constants {
                 DriveConstants.kLeftMotor2Port = 15;
                 DriveConstants.kRightMotor1Port = 13;
                 DriveConstants.kRightMotor2Port = 14;
+                IntakeConstants.kIntakeFlipMotorPort = 10;
                 IntakeConstants.kIntakeMotorPort = 4;
                 IntakeConstants.kConveyorMotor1Port = 5;
                 IntakeConstants.kConveyorMotor2Port = 8;
                 ClimberConstants.kClimberMotor1Port = 16;
                 ClimberConstants.kClimberMotor2Port = 17;
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
-
+                ControlPanelConstants.kControlPanelRotatorMotorPort = 3;
+                ControlPanelConstants.kWheelRotatorMotorPort = 6;
 
                 DriveConstants.ksVolts = 0.146;
                 DriveConstants.kvVoltSecondsPerMeter = 2.17;
@@ -254,6 +256,7 @@ public abstract class Constants {
         //What I2C port to plug the REV Color Sensor V3 into
         public static I2C.Port kColorSensorPort = I2C.Port.kOnboard;
         public static int kWheelRotatorMotorPort = 7;
+        public static int kControlPanelRotatorMotorPort = 7;
 
         public static double kSliceWidthCounts = 32;
         public static double kRedColorDistanceThreshold = 0.17;
@@ -289,8 +292,7 @@ public abstract class Constants {
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
         
-        public static int kIntakeFlipMotor1Port = 7;
-        public static int kIntakeFlipMotor2Port = 7;
+        public static int kIntakeFlipMotorPort = 7;
         public static int kIntakeMotorPort = 7;
         public static int kConveyorMotor1Port = 7;
         public static int kConveyorMotor2Port = 7;

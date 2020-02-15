@@ -31,7 +31,8 @@ import frc.robot.commands.ControlPanelRotate;
  */
 public class ControlPanelController extends SubsystemBase {
   //Note: reading the color wheel works well, but for sensing balls in the intake, use Blue and Proximity.
-  CANSparkMax m_wheelRotatorMotor;
+  CANSparkMax m_wheelRotatorMotor; //the wheel rotates the control panel
+  CANSparkMax m_controllerRotatorMotor; //Rotates the mechanism to put it on the control panel
   CANEncoder m_wheelRotatorEncoder;
   ColorSensorV3 m_colorSensor;
   ColorMatch m_colorMatcher;
@@ -46,6 +47,8 @@ public class ControlPanelController extends SubsystemBase {
     if (ControlPanelConstants.kHasControlPanel) {
       m_wheelRotatorMotor = new CANSparkMax(ControlPanelConstants.kWheelRotatorMotorPort, MotorType.kBrushless);
       m_wheelRotatorEncoder = m_wheelRotatorMotor.getEncoder();
+
+      m_controllerRotatorMotor = new CANSparkMax(ControlPanelConstants.kControlPanelRotatorMotorPort, MotorType.kBrushless);
       
       m_colorSensor = new ColorSensorV3(ControlPanelConstants.kColorSensorPort);
       m_colorMatcher = new ColorMatch();

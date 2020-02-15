@@ -19,6 +19,7 @@ public class Intake extends SubsystemBase {
   CANSparkMax intakeMotor;
   CANSparkMax conveyorMotor1;
   CANSparkMax conveyorMotor2;
+  CANSparkMax intakeFlipMotor;
   Ultrasonic sonic;
   /**
    * Creates a new Intake.
@@ -26,6 +27,7 @@ public class Intake extends SubsystemBase {
   public Intake() {
     if (IntakeConstants.kHasIntake) {
       intakeMotor = new CANSparkMax(IntakeConstants.kIntakeMotorPort, MotorType.kBrushless);
+      intakeFlipMotor = new CANSparkMax(IntakeConstants.kIntakeFlipMotorPort, MotorType.kBrushed);
       conveyorMotor1 = new CANSparkMax(IntakeConstants.kConveyorMotor1Port, MotorType.kBrushless);
       conveyorMotor2 = new CANSparkMax(IntakeConstants.kConveyorMotor2Port, MotorType.kBrushless);
     }
