@@ -171,7 +171,7 @@ public abstract class Constants {
                 DriveConstants.kRightMotor2Port = 3;
             } break;
             case TestBoard: {
-                LEDConstants.kHasLEDs = true;
+                LEDConstants.kHasLEDs = false;
                 ShooterConstants.kHasShooter = false;
                 DriveConstants.kHasDriveTrain = false;
                 IntakeConstants.kHasIntake = false;
@@ -331,7 +331,7 @@ public abstract class Constants {
         };
         public static Color[] kRandomSequence = {
             ColorShim.kRed,
-            ColorShim.kWhite, 
+            ColorShim.kWhite,
             ColorShim.kBlue,
             ColorShim.kGreen,
             ColorShim.kYellow,

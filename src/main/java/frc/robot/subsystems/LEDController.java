@@ -29,7 +29,6 @@ public class LEDController extends SubsystemBase {
    */
   public LEDController() {
     if (LEDConstants.kHasLEDs) {
-      
       m_led = new AddressableLED(LEDConstants.kLEDPWMPort);
       m_ledBuffer = new AddressableLEDBuffer(LEDConstants.kLEDCount);
       m_led.setLength(m_ledBuffer.getLength());
@@ -40,50 +39,6 @@ public class LEDController extends SubsystemBase {
         new Burst(0, m_ledBuffer.getLength(), 3, ColorShim.kBlack, ColorShim.kRed)
       };
     }
-  }
-  int m_rainbowFirstPixelHue = 0;
-  private void rainbow() {
-    // For every pixel
-    for (var i = 0; i < m_ledBuffer.getLength(); i++) {
-      // Calculate the hue - hue is easier for rainbows because the color
-      // shape is a circle so only one value needs to precess
-      final var hue = (m_rainbowFirstPixelHue + (i * 180 / m_ledBuffer.getLength())) % 180;
-      // Set the value
-      m_ledBuffer.setHSV(i, hue, 255, 128);
-    }
-    // Increase by to make the rainbow "move"
-    m_rainbowFirstPixelHue += 3;
-    // Check bounds
-    m_rainbowFirstPixelHue %= 180;
-  }
-  int m_chase = 0;
-  int wait = 1;
-  int dt = 4;
-  int m_chaseWidth = 5;
-  private void chase(int start, int stop, Color first, Color second) {
-    wait++;
-    if (wait % dt == 0) {
-      for(var i = start; i < stop; i++) {
-        if ((i + m_chase) % (m_chaseWidth*2) < m_chaseWidth) {
-          m_ledBuffer.setLED(i, first);
-        }
-        else {
-          m_ledBuffer.setLED(i, second);
-        }
-      }
-      m_chase += 1;
-      m_chase %= m_chaseWidth*2;
-    }
-  }
-  private void solid(int start, int stop, Color color) {
-    for(var i = m_ledBuffer.getLength() / 2; i < m_ledBuffer.getLength(); i++) {
-      m_ledBuffer.setLED(i, color);
-    }
-  }
-  private void partial() {
-    chase(0, m_ledBuffer.getLength() / 2, Color.kGreen, Color.kYellow);
-    chase(m_ledBuffer.getLength() / 2, m_ledBuffer.getLength(), Color.kRed, Color.kBlue);
-    //solid(m_ledBuffer.getLength() / 2, m_ledBuffer.getLength(), ColorShim.kOrangeRed);
   }
   private void sections() {
     for (Section s : sections) {
@@ -187,5 +142,50 @@ public class LEDController extends SubsystemBase {
     public void disturb(int position) {
       disturbances.add(position);
     }
+  }
+  
+  int m_rainbowFirstPixelHue = 0;
+  private void rainbow() {
+    // For every pixel
+    for (var i = 0; i < m_ledBuffer.getLength(); i++) {
+      // Calculate the hue - hue is easier for rainbows because the color
+      // shape is a circle so only one value needs to precess
+      final var hue = (m_rainbowFirstPixelHue + (i * 180 / m_ledBuffer.getLength())) % 180;
+      // Set the value
+      m_ledBuffer.setHSV(i, hue, 255, 128);
+    }
+    // Increase by to make the rainbow "move"
+    m_rainbowFirstPixelHue += 3;
+    // Check bounds
+    m_rainbowFirstPixelHue %= 180;
+  }
+  int m_chase = 0;
+  int wait = 1;
+  int dt = 4;
+  int m_chaseWidth = 5;
+  private void chase(int start, int stop, Color first, Color second) {
+    wait++;
+    if (wait % dt == 0) {
+      for(var i = start; i < stop; i++) {
+        if ((i + m_chase) % (m_chaseWidth*2) < m_chaseWidth) {
+          m_ledBuffer.setLED(i, first);
+        }
+        else {
+          m_ledBuffer.setLED(i, second);
+        }
+      }
+      m_chase += 1;
+      m_chase %= m_chaseWidth*2;
+    }
+  }
+  private void solid(int start, int stop, Color color) {
+    for(var i = m_ledBuffer.getLength() / 2; i < m_ledBuffer.getLength(); i++) {
+      m_ledBuffer.setLED(i, color);
+    }
+  }
+  private void partial() {
+    chase(0, m_ledBuffer.getLength() / 2, Color.kGreen, Color.kYellow);
+    chase(m_ledBuffer.getLength() / 2, m_ledBuffer.getLength(), Color.kRed, Color.kBlue);
+    //solid(m_ledBuffer.getLength() / 2, m_ledBuffer.getLength(), ColorShim.kOrangeRed);
   }
 }
