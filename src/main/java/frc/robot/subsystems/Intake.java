@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.Ultrasonic.Unit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.MultiplexerColorSensorV3;
+import frc.robot.MultiplexedColorSensor;
 import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
@@ -25,7 +25,13 @@ public class Intake extends SubsystemBase {
   CANSparkMax intakeFlipMotor;
   I2C mux;
   Ultrasonic sonic;
-  MultiplexerColorSensorV3 color;
+  //MultiplexerColorSensorV3 color;
+  /*ColorSensorV3 color6;
+  ColorSensorV3 color5;
+  ColorSensorV3 color4;*/
+  MultiplexedColorSensor color6;
+  MultiplexedColorSensor color5;
+  MultiplexedColorSensor color4;
   /**
    * Creates a new Intake.
    */
@@ -35,8 +41,17 @@ public class Intake extends SubsystemBase {
       // intakeFlipMotor = new CANSparkMax(IntakeConstants.kIntakeFlipMotorPort, MotorType.kBrushed);
       // conveyorMotor1 = new CANSparkMax(IntakeConstants.kConveyorMotor1Port, MotorType.kBrushless);
       // conveyorMotor2 = new CANSparkMax(IntakeConstants.kConveyorMotor2Port, MotorType.kBrushless);
-      //mux = new I2C(I2C.Port.kOnboard, 0x70);
-      color = new MultiplexerColorSensorV3(7);
+      /*mux = new I2C(I2C.Port.kOnboard, 0x70);
+      setPort(6);
+      //color = new MultiplexerColorSensorV3(7);
+      color6 = new ColorSensorV3(I2C.Port.kOnboard);
+      setPort(5);
+      color5 = new ColorSensorV3(I2C.Port.kOnboard);
+      setPort(4);
+      color4 = new ColorSensorV3(I2C.Port.kOnboard);*/
+      color6 = new MultiplexedColorSensor(I2C.Port.kOnboard, 6);
+      color5 = new MultiplexedColorSensor(I2C.Port.kOnboard, 5);
+      color4 = new MultiplexedColorSensor(I2C.Port.kOnboard, 4);
       //color = new ColorSensorV3(I2C.Port.kOnboard);
       /*for (int t=0; t<8; t++) {
         setPort(t);
@@ -61,13 +76,18 @@ public class Intake extends SubsystemBase {
   }
   
   void setPort(int i) {
-    if (i > 7) return;
-    mux.write(0x70, 1 << i);
-    mux.close();
+    //if (i > 7) return;
+    //mux.write(0x70, 1 << i);
+    //mux.close();
   }
   public void reading() {
-    //setPort(7);
-    System.out.println("Prox: "+color.getProximity());
+    setPort(6);
+    int d6 = color6.getProximity();
+    setPort(5);
+    int d5 = color5.getProximity();
+    setPort(4);
+    int d4 = color4.getProximity();
+    System.out.println("Prox6: "+d6+", Prox5: "+d5+", Prox4: "+d4);
     /*
     byte[] data = new byte[32];
     mux.read(0x52, data.length, data);
@@ -84,7 +104,9 @@ public class Intake extends SubsystemBase {
 
   @Override
   public void periodic() {
-    //reading();
+    if (IntakeConstants.kHasIntake) {
+      reading();
+    }
     // This method will be called once per scheduler run
     // System.out.println("US: "+sonic.getRangeInches());
   }

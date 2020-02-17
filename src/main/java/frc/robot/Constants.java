@@ -171,7 +171,7 @@ public abstract class Constants {
                 DriveConstants.kRightMotor2Port = 3;
             } break;
             case TestBoard: {
-                LEDConstants.kHasLEDs = false;
+                LEDConstants.kHasLEDs = true;
                 ShooterConstants.kHasShooter = false;
                 DriveConstants.kHasDriveTrain = false;
                 IntakeConstants.kHasIntake = false;
@@ -308,8 +308,8 @@ public abstract class Constants {
     }
     public static final class LEDConstants {
         public static boolean kHasLEDs = false;
-        public static int kLEDCount = 72;
-        public static int kLEDPWMPort = 6;
+        public static int kLEDCount = 72;//normally 72
+        public static int kLEDPWMPort = 9;
 
         public static Color[] kRainbowSequence = {
             ColorShim.kRed,

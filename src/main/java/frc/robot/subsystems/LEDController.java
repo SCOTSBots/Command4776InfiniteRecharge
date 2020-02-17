@@ -8,19 +8,26 @@
 package frc.robot.subsystems;
 
 import java.util.ArrayList;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.ColorShim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.Constants.LEDConstants;
 import frc.robot.Tools.MathTools;
 /**
  * We use WS2812b LEDs.
  */
 public class LEDController extends SubsystemBase {
-  public Burst[] sections;
+  public Section[] sections;
+  public Burst burstInput;
+  public ProgressBar bar;
   AddressableLED m_led;
   AddressableLEDBuffer m_ledBuffer;
 
@@ -33,11 +40,16 @@ public class LEDController extends SubsystemBase {
       m_ledBuffer = new AddressableLEDBuffer(LEDConstants.kLEDCount);
       m_led.setLength(m_ledBuffer.getLength());
       m_led.start();
-
-      sections = new Burst[]{
+      burstInput = new Burst(0, m_ledBuffer.getLength(), 3, ColorShim.kBlack, ColorShim.kRed);
+      bar = new ProgressBar(0, m_ledBuffer.getLength(), ColorShim.kBlack, ColorShim.kOrange, 0);
+      sections = new Section[]{
+        new FMSTimer(0, m_ledBuffer.getLength(), 15, 10, 30, 100)
         //new Chase(0, m_ledBuffer.getLength(), 3, LEDConstants.kRandom)
-        new Burst(0, m_ledBuffer.getLength(), 3, ColorShim.kBlack, ColorShim.kRed)
+        //new FMS(0, m_ledBuffer.getLength()),
+        //new Chase(m_ledBuffer.getLength()/2, m_ledBuffer.getLength(), 3, LEDConstants.kMainlyGreen)
       };
+      //new ProgressBar(0, 2, Color.kAliceBlue, Color.kBlack, 0);
+      //double time = DriverStation.getInstance().getMatchTime();
     }
   }
   private void sections() {
@@ -52,13 +64,17 @@ public class LEDController extends SubsystemBase {
       m_led.setData(m_ledBuffer);
     }
   }
-  abstract class Section {
+  abstract class Section 
+  {
     public int start;
     public int stop;
     abstract void update(AddressableLEDBuffer output);
     public Section(int start, int stop) {
       this.start = start;
       this.stop = stop;
+    }
+    public double percent(int i) {
+      return (1.0*i - start) / (1.0*stop - start);
     }
   }
 
@@ -143,49 +159,235 @@ public class LEDController extends SubsystemBase {
       disturbances.add(position);
     }
   }
-  
-  int m_rainbowFirstPixelHue = 0;
-  private void rainbow() {
-    // For every pixel
-    for (var i = 0; i < m_ledBuffer.getLength(); i++) {
-      // Calculate the hue - hue is easier for rainbows because the color
-      // shape is a circle so only one value needs to precess
-      final var hue = (m_rainbowFirstPixelHue + (i * 180 / m_ledBuffer.getLength())) % 180;
-      // Set the value
-      m_ledBuffer.setHSV(i, hue, 255, 128);
+  public class Toggle extends Section {
+    Color firstColor;
+    Color secondColor;
+    boolean usingSecond;
+    public Toggle(int start, int stop, Color firstColor, Color secondColor) {
+      super(start, stop);
+      this.firstColor = firstColor;
+      this.secondColor = secondColor;
+      usingSecond = false;
     }
-    // Increase by to make the rainbow "move"
-    m_rainbowFirstPixelHue += 3;
-    // Check bounds
-    m_rainbowFirstPixelHue %= 180;
+    @Override
+    public void update(AddressableLEDBuffer led) {
+      for (var i = start; i < stop; i++) {
+        led.setLED(i, usingSecond ? secondColor : firstColor);
+      }
+    }
+    public void setState(boolean usingSecond) {
+      this.usingSecond = usingSecond;
+    }
+    public void toggle() {
+      usingSecond = !usingSecond;
+    }
   }
-  int m_chase = 0;
-  int wait = 1;
-  int dt = 4;
-  int m_chaseWidth = 5;
-  private void chase(int start, int stop, Color first, Color second) {
-    wait++;
-    if (wait % dt == 0) {
-      for(var i = start; i < stop; i++) {
-        if ((i + m_chase) % (m_chaseWidth*2) < m_chaseWidth) {
-          m_ledBuffer.setLED(i, first);
+  public class ProgressBar extends Section {
+    public Color baseColor;
+    public Color filledColor;
+    double progress;
+    DoubleSupplier updatingValue;
+    public ProgressBar(int start, int stop) {
+      super(start, stop);
+    }
+    public ProgressBar(int start, int stop, Color baseColor, Color filledColor, double initialProgress) {
+      super(start, stop);
+      this.baseColor = baseColor;
+      this.filledColor = filledColor;
+      progress = initialProgress;
+      updatingValue = null;
+    }
+    public ProgressBar(int start, int stop, Color baseColor, Color filledColor, DoubleSupplier updatingValue) {
+      super(start, stop);
+      this.baseColor = baseColor;
+      this.filledColor = filledColor;
+      this.updatingValue = updatingValue;
+      progress = updatingValue.getAsDouble();
+    }
+
+    @Override
+    void update(AddressableLEDBuffer output) {
+      if (updatingValue != null) { //If we have a supplier of new data, use it!
+        progress = updatingValue.getAsDouble();
+      }
+      progress = MathUtil.clamp(progress, 0.0, 1.0);
+      for (var i = start; i < stop; i++) {
+        boolean inProgress = (percent(i) < progress); //Check if LED #i is in the progress
+        m_ledBuffer.setLED(i, inProgress ? filledColor : baseColor);
+      }
+    }
+    public void setValue(double newProgress){
+      progress = newProgress;
+    }
+    public void setUpdator(DoubleSupplier newUpdator) {
+      updatingValue = newUpdator;
+    }
+  }
+  public class FMS extends Section {
+    public FMS(int start, int stop) {
+      super(start, stop);
+    }
+    double hue=0;
+    @Override
+    void update(AddressableLEDBuffer output) {
+      smoothFade();
+      updateHue();
+      int x = (int) (255*fade(percent(0)));
+      if (!DriverStation.getInstance().isDisabled())
+      System.out.println(x);
+      for (var i = start; i < stop; i++) {
+        m_ledBuffer.setHSV(i, getHue(i), 255, x);
+      }
+    }
+    void updateHue(){
+      hue += speed*180;
+      hue %= 1.0;
+      if (time++ > delay) {
+        gameData = DriverStation.getInstance().getGameSpecificMessage();
+        time = 0;
+      }
+    }
+    String gameData = "X";
+    int delay = 100;
+    int time=0;
+    int getHue(int index) {
+      if(gameData.length() > 0)
+      {
+        switch (gameData.charAt(0))
+        {
+          case 'B' :
+            return 120;
+          case 'G' :
+            return 60;
+          case 'R' :
+            return 0;
+          case 'Y' :
+            return 30;
+          default :{
+              double h = (180.0*hue + (180.0 * percent(index))) % 180;
+              return (int)h;
+          }
+        }
+      } else {
+        double h = (180.0*hue + (180.0 * percent(index))) % 180;
+        return (int)h;
+      }
+    }
+  }
+  public class FMSTimer extends ProgressBar {
+    final int endGame;
+    final int totalAuto;
+    final int totalTeleop;
+    final Timer timer;
+
+    public FMSTimer(int start, int stop) {
+      super(start, stop);
+      endGame = 30;
+      totalAuto = 15;
+      totalTeleop = 135;
+      delay = 100;
+      timer = new Timer();
+      timer.reset();
+      baseColor=ColorShim.kBlack;
+    }
+    public FMSTimer(int start, int stop, int endGame, int totalAuto, int totalTeleop, int delay) {
+      super(start, stop);
+      this.endGame = endGame;
+      this.totalAuto = totalAuto;
+      this.totalTeleop = totalTeleop;
+      this.delay = delay;
+      timer = new Timer();
+      timer.reset();
+      baseColor=ColorShim.kBlack;
+    }
+    final int delay;
+    int t=0;
+    boolean inEndGame = false;
+    double lastTime = -1;
+    double startEndgame;
+    @Override
+    public void update(AddressableLEDBuffer output) {
+      if (++t > delay) {
+        t=0;
+        
+        boolean auto = DriverStation.getInstance().isAutonomous();
+        lastTime = DriverStation.getInstance().getMatchTime();
+        if (auto) {
+          inEndGame = false;
+          filledColor = ColorShim.kYellow;
         }
         else {
-          m_ledBuffer.setLED(i, second);
+          if (lastTime < endGame) {
+            inEndGame = true;
+            timer.start();
+            startEndgame = lastTime;
+          }
+          else {
+            inEndGame = false;
+            filledColor = ColorShim.kGreen;
+          }
+        }
+        double setPoint = auto?(lastTime / totalAuto):(lastTime / totalTeleop);
+        setValue(setPoint);
+      }
+      if (inEndGame) {
+        double timeLeft = startEndgame - timer.get();
+        System.out.println("time left: "+timeLeft);
+        if (timeLeft > endGame / 2) {
+          filledColor = timeLeft%1>0.5?ColorShim.kRed:ColorShim.kBlack;
+        }
+        else if (timeLeft > endGame / 4) {
+          filledColor = timeLeft%0.5>0.25?ColorShim.kRed:ColorShim.kBlack;
+        }
+        else {
+          filledColor = timeLeft%0.25>0.125?ColorShim.kRed:ColorShim.kBlack;
         }
       }
-      m_chase += 1;
-      m_chase %= m_chaseWidth*2;
+      if (lastTime <= 0) {
+        SUPERAWESOMELIGHTSHOW(start, stop, output);
+        return;
+      }
+      super.update(output);
+    }
+    
+  }
+  double speed = 0.0001;
+  double fade = 0;
+  private void updateFade() {
+    fade += speed*255;
+    fade %= 1.0;
+  }
+  boolean down;
+  void smoothFade() {
+    fade+= down?-0.02:1 * speed * 254;
+    if (fade >= 1) {
+      fade = 1;
+      down = true;
+    }
+    if (fade <= 0) {
+      down = false;
+      fade = 0;
     }
   }
-  private void solid(int start, int stop, Color color) {
-    for(var i = m_ledBuffer.getLength() / 2; i < m_ledBuffer.getLength(); i++) {
-      m_ledBuffer.setLED(i, color);
+  private double fade(double portion) {
+    double z = maintain(portion + fade);
+    return z*z;
+  }
+  double maintain(double x) {
+    if (x > 0.99 && x < 1.01) {
+      return 0.995;
+    }
+    else if (x > -0.01 && x < 0.01) {
+      return 0.005;
+    }
+    else {
+      return x;
     }
   }
-  private void partial() {
-    chase(0, m_ledBuffer.getLength() / 2, Color.kGreen, Color.kYellow);
-    chase(m_ledBuffer.getLength() / 2, m_ledBuffer.getLength(), Color.kRed, Color.kBlue);
-    //solid(m_ledBuffer.getLength() / 2, m_ledBuffer.getLength(), ColorShim.kOrangeRed);
+  int width = 3;
+  public void SUPERAWESOMELIGHTSHOW(int start, int stop, AddressableLEDBuffer led) {
+    for(var i = start; i < stop; i++) {
+      led.setLED(i, i%(width*2)<width?Color.kRed:Color.kWhite);
+    }
   }
 }

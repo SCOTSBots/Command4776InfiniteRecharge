@@ -7,15 +7,18 @@
 
 package frc.robot;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
@@ -25,6 +28,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
+import edu.wpi.first.wpilibj.util.ColorShim;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.LEDConstants;
@@ -143,10 +147,25 @@ public class RobotContainer {
   private void configureButtonBindings() {
     if (LEDConstants.kHasLEDs) {
       new JoystickButton(m_driverJoystick, Button.kA.value).whenPressed(()->{
-        m_leds.sections[0].disturb(0);
+        m_leds.burstInput.disturb(0);
       });
       new JoystickButton(m_driverJoystick, Button.kB.value).whenPressed(()->{
-        m_leds.sections[0].clearDisturbances();
+        m_leds.burstInput.clearDisturbances();
+      });
+      int endGame = 15;
+      int totalAuto = 10;
+      int totalTeleop = 30;
+      int delay = 100;
+      m_leds.bar.setUpdator(()->{
+        int t = 0;
+        if (t++ > delay) {
+          
+        }
+        boolean auto = DriverStation.getInstance().isAutonomous();
+        double time = DriverStation.getInstance().getMatchTime();
+        
+        m_leds.bar.filledColor = auto?ColorShim.kYellow:time < endGame?time%0.5>0.25?ColorShim.kRed:ColorShim.kBlack:ColorShim.kGreen; 
+        return auto?(time / totalAuto):(time / totalTeleop);//-m_driverJoystick.getY(GenericHID.Hand.kLeft);
       });
     }
 
@@ -204,7 +223,6 @@ public class RobotContainer {
     Trajectory jsonTrajectory = TrajectoryUtil.fromPathweaverJson(Paths.get(
         "/home/lvuser/deploy/output/"+file+".wpilib.json"));
     System.out.println("EasyRamseteCommand loaded \'"+file+"\' successfully.");
-    
     return new Pair<Command, Trajectory>(new RamseteCommand(
         jsonTrajectory,
         m_driveTrain::getPose,
