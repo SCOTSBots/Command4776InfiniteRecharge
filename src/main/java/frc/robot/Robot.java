@@ -9,6 +9,7 @@ package frc.robot;
 
 import java.io.IOException;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -49,8 +50,17 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our
     // autonomous chooser on the dashboard.
-    Constants.GenerateConstants(RobotType.TestBoard);
+    //CameraServer.getInstance().startAutomaticCapture();
+    Constants.GenerateConstants(RobotType.PracticeBot);
     m_robotContainer = new RobotContainer();
+    
+    try {
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+      System.out.println("Successfully loaded auto program.");
+    } catch (IOException e) {
+      System.out.println("Problem with creating the AUTO PROGRAM!!!!!");
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -91,18 +101,11 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    try {
-      m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-    } catch (IOException e) {
-      System.out.println("Problem with running Auto Init!!!!!");
-      e.printStackTrace();
-    }
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-    System.out.println("Starting auto with "+m_autonomousCommand);
   }
 
   /**

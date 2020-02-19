@@ -9,7 +9,6 @@ package frc.robot.subsystems;
 
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
@@ -21,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.Constants.LEDConstants;
 import frc.robot.Tools.MathTools;
+import frc.robot.Tools.DataTools.Triple;
 /**
  * We use WS2812b LEDs.
  */
@@ -42,9 +42,10 @@ public class LEDController extends SubsystemBase {
       m_led.start();
       burstInput = new Burst(0, m_ledBuffer.getLength(), 3, ColorShim.kBlack, ColorShim.kRed);
       bar = new ProgressBar(0, m_ledBuffer.getLength(), ColorShim.kBlack, ColorShim.kOrange, 0);
+      Section chase = new Chase(0, m_ledBuffer.getLength(), 3, LEDConstants.kRandomSequence);
+      Section ambient = new Ambience(0, m_ledBuffer.getLength(), Color.kBlack, LEDConstants.kRandomSequence);
       sections = new Section[]{
-        new FMSTimer(0, m_ledBuffer.getLength(), 15, 10, 30, 100)
-        //new Chase(0, m_ledBuffer.getLength(), 3, LEDConstants.kRandom)
+        new FMSTimer(0, m_ledBuffer.getLength(), 15, 10, 30, 100, ambient)
         //new FMS(0, m_ledBuffer.getLength()),
         //new Chase(m_ledBuffer.getLength()/2, m_ledBuffer.getLength(), 3, LEDConstants.kMainlyGreen)
       };
@@ -77,6 +78,8 @@ public class LEDController extends SubsystemBase {
       return (1.0*i - start) / (1.0*stop - start);
     }
   }
+
+  //Sections:
 
   class Chase extends Section {
     Color[] colors;
@@ -223,8 +226,8 @@ public class LEDController extends SubsystemBase {
       updatingValue = newUpdator;
     }
   }
-  public class FMS extends Section {
-    public FMS(int start, int stop) {
+  public class FMSControlPanel extends Section {
+    public FMSControlPanel(int start, int stop) {
       super(start, stop);
     }
     double hue=0;
@@ -234,7 +237,6 @@ public class LEDController extends SubsystemBase {
       updateHue();
       int x = (int) (255*fade(percent(0)));
       if (!DriverStation.getInstance().isDisabled())
-      System.out.println(x);
       for (var i = start; i < stop; i++) {
         m_ledBuffer.setHSV(i, getHue(i), 255, x);
       }
@@ -279,8 +281,9 @@ public class LEDController extends SubsystemBase {
     final int totalAuto;
     final int totalTeleop;
     final Timer timer;
+    Section replacement;
 
-    public FMSTimer(int start, int stop) {
+    public FMSTimer(int start, int stop, Section replacement) {
       super(start, stop);
       endGame = 30;
       totalAuto = 15;
@@ -289,8 +292,9 @@ public class LEDController extends SubsystemBase {
       timer = new Timer();
       timer.reset();
       baseColor=ColorShim.kBlack;
+      this.replacement = replacement;
     }
-    public FMSTimer(int start, int stop, int endGame, int totalAuto, int totalTeleop, int delay) {
+    public FMSTimer(int start, int stop, int endGame, int totalAuto, int totalTeleop, int delay, Section replacement) {
       super(start, stop);
       this.endGame = endGame;
       this.totalAuto = totalAuto;
@@ -299,6 +303,7 @@ public class LEDController extends SubsystemBase {
       timer = new Timer();
       timer.reset();
       baseColor=ColorShim.kBlack;
+      this.replacement = replacement;
     }
     final int delay;
     int t=0;
@@ -344,13 +349,75 @@ public class LEDController extends SubsystemBase {
         }
       }
       if (lastTime <= 0) {
-        SUPERAWESOMELIGHTSHOW(start, stop, output);
+        replacement.update(output);
+        //SUPERAWESOMELIGHTSHOW(start, stop, output);
         return;
       }
       super.update(output);
     }
     
   }
+  public class Ambience extends Section {
+    Color baseColor;
+    Color[] maxColors;
+    final double newPointFreq = 0.5;
+    final double ageSpeed = 0.03;
+    final double maxDistance = 0.05;
+    final double maxColor = 0.05;
+    ArrayList<Triple<Integer,Double,Color>> points;
+    public Ambience(int start, int stop, Color baseColor, Color... maxColors) {
+      super(start, stop);
+      this.baseColor = baseColor;
+      this.maxColors = maxColors;
+      points = new ArrayList<Triple<Integer,Double, Color>>();
+      addPoint();
+    }
+    void addPoint() {
+      Color newColor = maxColors[(int) (Math.random()*maxColors.length)];
+      double pos =  Math.random()*(stop-start) + start;
+      points.add(new Triple<Integer, Double, Color>((int)pos, 1.0, newColor));
+    }
+    @Override
+    void update(AddressableLEDBuffer output) {
+      for(var i = start; i < stop; i++) {
+        Triple<Integer, Double, Color> c = atColor(i);
+        if (c == null) {
+          m_ledBuffer.setLED(i, baseColor);
+        }
+        else {
+          double r = 255*MathTools.map(c.getT2(), 0, 1, baseColor.red, c.getT3().red);
+          double g = 255*MathTools.map(c.getT2(), 0, 1, baseColor.green, c.getT3().green);
+          double b = 255*MathTools.map(c.getT2(), 0, 1, baseColor.blue, c.getT3().blue);
+          m_ledBuffer.setRGB(i, (int)r, (int)g, (int)b);
+        }
+      }
+      agePoints();
+      if (Math.random() < newPointFreq) {
+        addPoint();
+      }
+    }
+    Triple<Integer, Double, Color> atColor(int i) {
+      for (Triple<Integer, Double, Color> p : points) {
+        if (p.getT1() == i) {
+          return p;
+        }
+      }
+      return null;
+    }
+    void agePoints(){
+      for(int i = 0; i < points.size(); i++) {
+        Triple<Integer, Double, Color> p = points.get(i);
+        p.setT2(p.getT2()-ageSpeed);
+        if (p.getT2() <= 0) {
+          points.remove(i);
+        }
+      }
+    }
+    
+  }
+
+  //Methods:
+  
   double speed = 0.0001;
   double fade = 0;
   private void updateFade() {
@@ -384,10 +451,67 @@ public class LEDController extends SubsystemBase {
       return x;
     }
   }
+  int stage = 0;
   int width = 3;
+  double x = 0;
   public void SUPERAWESOMELIGHTSHOW(int start, int stop, AddressableLEDBuffer led) {
+    switch(stage) {
+      case 0: {
+        progress(start, stop, led, Color.kCyan, Color.kPurple, x);
+        x+=0.03;
+        if (x >= 1) {
+          stage++;
+          x = 0;
+        }
+      }
+      break;
+      case 1: {
+        solid(start, stop, led, Color.kPurple);
+        x+=0.03;
+        if (x >= 1) {
+          stage++;
+          x = 0;
+        }
+      }
+      break;
+      case 2: {
+        progress(start, stop, led, Color.kPurple, Color.kDarkGreen, x);
+        x+=0.03;
+        if (x >= 1) {
+          stage++;
+          x = 0;
+        }
+      }
+      break;
+      case 3: {
+        antiProgress(start, stop, led, Color.kDarkGreen, Color.kCyan, x);
+        x+=0.03;
+        if (x >= 1) {
+          stage++;
+          x = 0;
+        }
+      }
+      break;
+      default: stage = 0;
+    }
+  }
+  void progress(int start, int stop, AddressableLEDBuffer led, Color oldC, Color newC, double progress) {
     for(var i = start; i < stop; i++) {
-      led.setLED(i, i%(width*2)<width?Color.kRed:Color.kWhite);
+      double part = (1.0*i - start) / (stop - start);
+      boolean good = part > progress;
+      led.setLED(i, good?oldC:newC);
+    }
+  }
+  void antiProgress(int start, int stop, AddressableLEDBuffer led, Color oldC, Color newC, double progress) {
+    for(var i = start; i < stop; i++) {
+      double part = (1.0*i - start) / (stop - start);
+      boolean good = part < (1 - progress);
+      led.setLED(i, good?oldC:newC);
+    }
+  }
+  void solid(int start, int stop, AddressableLEDBuffer led, Color c) {
+    for(var i = start; i < stop; i++) {
+      led.setLED(i, c);
     }
   }
 }

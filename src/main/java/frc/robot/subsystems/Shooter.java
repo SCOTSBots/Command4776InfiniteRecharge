@@ -15,6 +15,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ShooterConstants;
@@ -31,6 +32,9 @@ public class Shooter extends SubsystemBase {
   CANSparkMax shooterMotor1;
   CANSparkMax shooterMotor2;
   CANSparkMax turretMotor;
+
+  CANEncoder shooterEncoder1;
+  CANEncoder shooterEncoder2;
   CANEncoder turretEncoder;
 
   Servo hoodAngleServo1;
@@ -50,15 +54,20 @@ public class Shooter extends SubsystemBase {
    */
   public Shooter() {
     if (ShooterConstants.kHasShooter) {
-      // shooterMotor1 = new CANSparkMax(ShooterConstants.kShooterMotor1Port, MotorType.kBrushless);
-      // shooterMotor2 = new CANSparkMax(ShooterConstants.kShooterMotor2Port, MotorType.kBrushless);
-      // shooterMotor1.setIdleMode(IdleMode.kCoast);
-      // shooterMotor2.setIdleMode(IdleMode.kCoast);
-      // shooterMotor2.follow(shooterMotor1);
+      shooterMotor1 = new CANSparkMax(ShooterConstants.kShooterMotor1Port, MotorType.kBrushless);
+      shooterMotor2 = new CANSparkMax(ShooterConstants.kShooterMotor2Port, MotorType.kBrushless);
+
+      shooterEncoder1 = shooterMotor1.getEncoder();
+      shooterEncoder2 = shooterMotor2.getEncoder();
+
+      shooterMotor1.setIdleMode(IdleMode.kCoast);
+      shooterMotor2.setIdleMode(IdleMode.kCoast);
+      shooterMotor1.setInverted(true);
+      shooterMotor2.setInverted(false);
       
-      turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
-      turretMotor.setIdleMode(IdleMode.kBrake);
-      turretEncoder = turretMotor.getEncoder();
+      // turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
+      // turretMotor.setIdleMode(IdleMode.kBrake);
+      // turretEncoder = turretMotor.getEncoder();
 
       // hoodAngleServo1 = new Servo(ShooterConstants.kHoodAngleServo1Port);
       // hoodAngleServo2 = new Servo(ShooterConstants.kHoodAngleServo2Port);
@@ -72,7 +81,7 @@ public class Shooter extends SubsystemBase {
       NetworkTableEntry stream = table.getEntry("stream");
       //Add togglers for the NT entries
       ShuffleboardHelper.AddToggle("Limelight", "LEDMode", ledMode::setDouble, new Toggle<Integer>(1, 3));
-      ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", stream::setDouble, new Toggle<Integer>(1, 2));
+      //ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", stream::setDouble, new Toggle<Integer>(1, 2));
 
       //ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
       ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, (x)->{
@@ -88,6 +97,11 @@ public class Shooter extends SubsystemBase {
       tx = table.getEntry("tx");
       ty = table.getEntry("ty");
       ta = table.getEntry("ta");
+
+      
+      Shuffleboard.getTab("Shooter").addNumber("Shooter1 Vel", shooterEncoder1::getVelocity);
+      Shuffleboard.getTab("Shooter").addNumber("Shooter2 Vel", shooterEncoder2::getVelocity);
+      Shuffleboard.getTab("Shooter").addNumber("Limelight Distance", this::getLimelightDistance);
     }
   }
 
@@ -131,12 +145,29 @@ public class Shooter extends SubsystemBase {
   }
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    // Calculate the limelight distance
   }
 
-  /**
-   * This method does everything to aim the turret using the limelight and determine when to shoot
-   */
+  public double getLimelightDistance() {
+    //System.out.println("v="+tv.getDouble(0.0));
+    if (tv.getDouble(0.0) > 0.9) {
+      double fixedCameraAngle = 14;//degrees
+      double cameraReadingAngle = ty.getDouble(0.0);//degrees
+      double fixedCameraHeight = 0.923925;//meters
+      double fixedGoalHeight = 2.49936;//meters
+      double distance = (fixedGoalHeight - fixedCameraHeight) / 
+      (Math.tan(Math.toRadians(cameraReadingAngle + fixedCameraAngle)));//meters
+      return distance;
+    }
+    else {
+      return 0.0;
+    }
+  }
+
+  public void powerShooter(double speed) {
+    shooterMotor1.set(speed);
+    shooterMotor2.set(speed);
+  }
 
   /**
    * This method does everything to aim the turret using the limelight and shoot when ready.

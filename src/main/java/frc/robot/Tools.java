@@ -10,6 +10,7 @@ package frc.robot;
 import java.util.function.Consumer;
 
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.ColorShim;
 import frc.robot.Constants.ControlPanelConstants;
 
 /**
@@ -38,6 +39,19 @@ public class Tools {
       public T2 setT2(T2 b) {
           this.b = b;
           return b;
+      }
+    }
+    public static class Triple<T1, T2, T3> extends Pair<T1, T2> {
+      private T3 c;
+      public Triple(T1 a, T2 b, T3 c) {
+        super(a, b);
+        this.c = c;
+      }
+      public T3 getT3() {
+        return c;
+      }
+      public void setT3(T3 c) {
+        this.c = c;
       }
     }
     public static class Cycler<T> {
@@ -105,8 +119,8 @@ public class Tools {
   }
   
   public static class MathTools {
-    public static double deadzone(double x) {
-      if (Math.abs(x) < 0.05) {
+    public static double deadzone(double x) { //DZ = 0.15
+      if (Math.abs(x) < 0.15) {
         return 0;
       } else {
         return x;
@@ -125,6 +139,12 @@ public class Tools {
     }
     public static double absoluteDecimal(double position, double total) {
       return (position % total) / total;
+    }
+    public static double randomInRange(double min, double max) {
+      return Math.random() * (max - min) + min;
+    }
+    public static double map(double x, double inMin, double inMax, double outMin, double outMax) {
+      return (outMax - outMin) * (x - inMin) / (inMax - inMin) + outMin;
     }
   }
   
@@ -200,7 +220,7 @@ public class Tools {
       }
       return BaseColor.Unknown;
     }
-  
+    
   }
 
 }

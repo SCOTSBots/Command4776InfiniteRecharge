@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -18,7 +17,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
@@ -30,9 +28,13 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.util.ColorShim;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.ControlPanelConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.LEDConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.Constants.ShooterConstants;
+import frc.robot.Tools.MathTools;
 import frc.robot.Tools.DataTools.Pair;
 import frc.robot.pixy.Pixy2CCC.Block;
 import frc.robot.subsystems.Climber;
@@ -42,6 +44,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDController;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -73,48 +76,9 @@ public class RobotContainer {
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    System.out.println("Hello and Welcome to Infinite Recharge! Starting up robot \""+Constants.RobotName+"\"!");
     // Configure the button bindings
     configureButtonBindings();
-    
-    Runnable pixy = ()->{
-      Block b = m_driveTrain.getBiggestBlock();
-      int pos = (b==null)?150:b.getX();
-      double calculate = ((1.0*pos - 150.0)/150.0) / 1.0;
-      double turn = m_driverJoystick.getAButton()?(
-        calculate
-      ):m_driverJoystick.getX(GenericHID.Hand.kRight);
-      m_driveTrain.curvatureDrive(
-        -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
-        turn, 
-        m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
-          m_driveTrain.tankDriveVolts(l*10, r*10);
-        });
-    };
-    Runnable cheesyDrive = ()->{
-      double turn = m_driverJoystick.getX(GenericHID.Hand.kRight);
-      m_driveTrain.curvatureDrive(
-        -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
-        turn, 
-        m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
-          m_driveTrain.tankDriveVolts(l*10, r*10);
-        });
-    };
-    switch (OIConstants.teleop) {
-      case CheesyDrive:  
-        m_driveTrain.setDefaultCommand(new RunCommand(cheesyDrive,m_driveTrain));
-        break;
-      case PixyDrive:
-        m_driveTrain.setDefaultCommand(new RunCommand(pixy,m_driveTrain));
-        break;
-    }
-    m_cpController.setDefaultCommand(new RunCommand(()->{
-      //m_cpController.set(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));
-    },m_cpController));
-    m_shooter.setDefaultCommand(new RunCommand(()->{
-      double turn = m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
-      m_shooter.rotate(turn);
-    }, m_shooter));
-    
 
     //Set up Shuffleboard
     //Set up Driver Station Tab
@@ -145,6 +109,79 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    if (DriveConstants.kHasDriveTrain) {
+      Runnable pixy = ()->{
+        Block b = m_driveTrain.getBiggestBlock();
+        int pos = (b==null)?150:b.getX();
+        double calculate = ((1.0*pos - 150.0)/150.0) / 1.0;
+        double turn = m_driverJoystick.getAButton()?(
+          calculate
+        ):m_driverJoystick.getX(GenericHID.Hand.kRight);
+        m_driveTrain.curvatureDrive(
+          -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
+          turn, 
+          m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
+            m_driveTrain.tankDriveVolts(l*10, r*10);
+          });
+      };
+      Runnable cheesyDrive = ()->{
+        double turn = m_driverJoystick.getX(GenericHID.Hand.kRight);
+        m_driveTrain.curvatureDrive(
+          -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
+          turn, 
+          m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
+            m_driveTrain.tankDriveVolts(l*10, r*10);
+          });
+      };
+      switch (OIConstants.teleop) {
+        case CheesyDrive:  
+          m_driveTrain.setDefaultCommand(new RunCommand(cheesyDrive,m_driveTrain));
+          break;
+        case PixyDrive:
+          m_driveTrain.setDefaultCommand(new RunCommand(pixy,m_driveTrain));
+          break;
+      }
+    }
+    if (ControlPanelConstants.kHasControlPanel) {
+      m_cpController.setDefaultCommand(new RunCommand(()->{
+        //m_cpController.set(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));
+      },m_cpController));
+    }
+    if (IntakeConstants.kHasIntake) {
+      new JoystickButton(m_manipulatorJoystick, Button.kX.value).whenPressed(()->{m_intake.setFlipper(false);});
+      
+      new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
+      new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
+      new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
+      new JoystickButton(m_manipulatorJoystick, Button.kBumperLeft.value).whenPressed(()->{
+        m_intake.setFlipper(true);
+      }).whenReleased(()->{
+        //m_intake.setFlipper(false);
+        m_intake.powerIntake(0);
+      }).whileActiveContinuous(()->{
+        m_intake.powerIntake(1);
+      });
+      new JoystickButton(m_manipulatorJoystick, Button.kBumperRight.value).whenReleased(()->{
+        m_intake.powerIntake(0);
+      }).whileActiveContinuous(()->{
+        m_intake.powerIntake(-1);
+      });
+      
+      m_intake.setDefaultCommand(new RunCommand(()->{
+        //if (m_manipulatorJoystick.getYButton()) {
+          double speed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft) );
+          double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
+          
+          m_intake.powerConveyor(speed-aspeed);
+        
+      },m_intake));
+    }
+    if (ShooterConstants.kHasShooter) {
+      m_shooter.setDefaultCommand(new RunCommand(()->{
+        double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
+        m_shooter.powerShooter(speed);
+      },m_shooter));
+    }
     if (LEDConstants.kHasLEDs) {
       new JoystickButton(m_driverJoystick, Button.kA.value).whenPressed(()->{
         m_leds.burstInput.disturb(0);
@@ -152,35 +189,39 @@ public class RobotContainer {
       new JoystickButton(m_driverJoystick, Button.kB.value).whenPressed(()->{
         m_leds.burstInput.clearDisturbances();
       });
-      int endGame = 15;
+      /*int endGame = 15;
       int totalAuto = 10;
       int totalTeleop = 30;
       int delay = 100;
       m_leds.bar.setUpdator(()->{
         int t = 0;
         if (t++ > delay) {
-          
+
         }
         boolean auto = DriverStation.getInstance().isAutonomous();
         double time = DriverStation.getInstance().getMatchTime();
         
         m_leds.bar.filledColor = auto?ColorShim.kYellow:time < endGame?time%0.5>0.25?ColorShim.kRed:ColorShim.kBlack:ColorShim.kGreen; 
         return auto?(time / totalAuto):(time / totalTeleop);//-m_driverJoystick.getY(GenericHID.Hand.kLeft);
-      });
+      });*/
     }
-
-    //Override the driver's controls when the manipulator wants to turn the chassis while turning the turret
-    new JoystickButton(m_manipulatorJoystick, Button.kStickLeft.value).whileHeld(()->{
-      double turn = 10*m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
-      m_driveTrain.tankDriveVolts(turn, -turn);
-    }, m_driveTrain, m_shooter);
-
-    //Add A button - aims turret
-    new JoystickButton(m_manipulatorJoystick, Button.kA.value).whileHeld(()->{
-      double chassisTurn = 10 * m_shooter.AutoAimAndShoot();
-      m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
-    },m_shooter, m_driveTrain);
-
+    if (ShooterConstants.kHasShooter && DriveConstants.kHasDriveTrain) {
+      //Override the driver's controls when the manipulator wants to turn the chassis while turning the turret
+      new JoystickButton(m_manipulatorJoystick, Button.kStickLeft.value).whileHeld(()->{
+        double turn = 10*m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
+        m_driveTrain.tankDriveVolts(turn, -turn);
+      }, m_driveTrain, m_shooter);
+  
+      //Add A button - aims turret
+      new JoystickButton(m_manipulatorJoystick, Button.kA.value).whileHeld(()->{
+        double chassisTurn = 10 * m_shooter.AutoAimAndShoot();
+        m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
+      },m_shooter, m_driveTrain);
+    }
+    if (IntakeConstants.kHasIntake) {
+      
+      //new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(()->{});
+    }
   }
 
 
@@ -192,7 +233,8 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() throws IOException {
     // An ExampleCommand will run in autonomous
-    return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
+    return MultiRamseteCommands("CircleRight");
+    //return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
     //return MultiRamseteCommands("DirectTrenchAuto","DirectTrenchPickup","one","three","superAuto");
   }
   SequentialCommandGroup MultiRamseteCommands (Map<String,Command> map) {

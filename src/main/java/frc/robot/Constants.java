@@ -34,23 +34,26 @@ public abstract class Constants {
         TestBoard,
         JeffBot;
     }
+    public static String RobotName;
     public static RobotType GenerateConstants(RobotType robot) {
         switch (robot) {
             case CompBot: {
-
+                RobotName = "The Competition Robot";
             } break;
             case PracticeBot: {
+                RobotName = "The Practice Robot";
+
                 DriveConstants.kHasDriveTrain = true;
-                DriveConstants.kHasGyro = false;
+                DriveConstants.kHasGyro = true;
                 DriveConstants.kHasPixy = false;
                 ControlPanelConstants.kHasControlPanel = false;
                 ClimberConstants.kHasClimber = false;
-                IntakeConstants.kHasIntake = false;
-                ShooterConstants.kHasShooter = false;
+                IntakeConstants.kHasIntake = true;
+                ShooterConstants.kHasShooter = true;
 
                 //CAN WIRING:
-                ShooterConstants.kShooterMotor1Port = 9;
-                ShooterConstants.kShooterMotor2Port = 18;
+                ShooterConstants.kShooterMotor1Port = 18;
+                ShooterConstants.kShooterMotor2Port = 6;
                 ShooterConstants.kHoodAngleServo1Port = 1; //PWM, not CAN
                 ShooterConstants.kHoodAngleServo2Port = 2; //PWM, not CAN
                 ShooterConstants.kTurretMotorPort = 11;
@@ -66,12 +69,13 @@ public abstract class Constants {
                 ClimberConstants.kClimberMotor2Port = 17;
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
                 ControlPanelConstants.kControlPanelRotatorMotorPort = 3;
-                ControlPanelConstants.kWheelRotatorMotorPort = 6;
+                ControlPanelConstants.kWheelRotatorMotorPort = -1;
 
-                DriveConstants.ksVolts = 0.146;
-                DriveConstants.kvVoltSecondsPerMeter = 2.17;
-                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.308;
-                DriveConstants.kPDriveVel = 2.59;
+                //DRIVE CONSTANTS
+                DriveConstants.ksVolts = 0.176;
+                DriveConstants.kvVoltSecondsPerMeter = 2.78;
+                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.409;
+                DriveConstants.kPDriveVel = 2.58;
                 DriveConstants.kTrackwidthMeters = 0.66;
                 DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
                     DriveConstants.kTrackwidthMeters);
@@ -81,24 +85,35 @@ public abstract class Constants {
                     DriveConstants.kaVoltSecondsSquaredPerMeter);
                 DriveConstants.kLeftPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
                 DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
-                DriveConstants.kMaxSpeedMetersPerSecond = 3;
-                DriveConstants.kMaxAccelerationMetersPerSecondSquared = 3;
+                DriveConstants.kMaxSpeedMetersPerSecond = 1.0;
+                DriveConstants.kMaxAccelerationMetersPerSecondSquared = 1.0;
                 DriveConstants.kMaxAngularSpeedRadiansPerSecond = 2 * Math.PI;
                 //DriveConstants.kRamseteB = 2;
                 //DriveConstants.kRamseteZeta = 0.7;
                 DriveConstants.kMaxRPM = 5700;
-                DriveConstants.kWheelDiameter = 0.152;
-                DriveConstants.kMotorGearsToWheelGears = 8.44;
-                DriveConstants.kRevolutionsToMeters = Math.PI * DriveConstants.kWheelDiameter / 8.44;
+                DriveConstants.kWheelDiameter = 0.148;
+                DriveConstants.kMotorGearsToWheelGears = 10.7;
+                DriveConstants.kRevolutionsToMeters = Math.PI * DriveConstants.kWheelDiameter / DriveConstants.kMotorGearsToWheelGears;
                 DriveConstants.kRPMtoMetersPerSecond = 
                     Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
                 DriveConstants.kGyroReversed = true;
 
+                //INTAKE CONSTANTS
+                IntakeConstants.kIntakeFlipP = 0.065;
+                IntakeConstants.kIntakeFlipI = 1e-4;
+                IntakeConstants.kIntakeFlipD = 1;
+                IntakeConstants.kIntakeFlipIz = 0;
+                IntakeConstants.kIntakeFlipFF = 0;
+                IntakeConstants.kIntakeFlipMaxOutput = 1;
+                IntakeConstants.kIntakeFlipMinOutput = -1;
+                IntakeConstants.kIntakeFlipInEncoder = 0.0;
+                IntakeConstants.kIntakeFlipOutEncoder = -51.0;
 
                 ShooterConstants.kMaxTurretAngle = 90;
                 ShooterConstants.kMinTurretAngle = -90;
             } break;
             case KOPChassis: {
+                RobotName = "The KOP Chassis Robot";
                 DriveConstants.kHasDriveTrain = true;
                 DriveConstants.kHasGyro = true;
                 DriveConstants.kHasPixy = false;
@@ -134,6 +149,8 @@ public abstract class Constants {
                 DriveConstants.kRightMotor2Port = 6;
             } break;
             case JeffBot: {
+                RobotName = "The JEFF Robot";
+
                 DriveConstants.kHasDriveTrain = true;
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = true;
@@ -171,6 +188,7 @@ public abstract class Constants {
                 DriveConstants.kRightMotor2Port = 3;
             } break;
             case TestBoard: {
+                RobotName = "The Tester Boarder";
                 LEDConstants.kHasLEDs = true;
                 ShooterConstants.kHasShooter = false;
                 DriveConstants.kHasDriveTrain = false;
@@ -278,8 +296,8 @@ public abstract class Constants {
     public static final class ShooterConstants {
         public static boolean kHasShooter = false;
         
-        public static int kShooterMotor1Port = 7;
-        public static int kShooterMotor2Port = 7;
+        public static int kShooterMotor1Port = 7;//Shooter 1 = left
+        public static int kShooterMotor2Port = 7;//Shooter 2 = right
         public static int kTurretMotorPort = 0;
         public static int kAngleScrewServoPort = 0;
         public static int kHoodAngleServo1Port = 9;
@@ -299,6 +317,27 @@ public abstract class Constants {
         public static int kIntakeMotorPort = 7;
         public static int kConveyorMotor1Port = 7;
         public static int kConveyorMotor2Port = 7;
+
+        public static double kIntakeFlipP = 0.085;
+        public static double kIntakeFlipI = 1e-4;
+        public static double kIntakeFlipD = 1;
+        public static double kIntakeFlipIz = 0;
+        public static double kIntakeFlipFF = 0;
+        public static double kIntakeFlipMaxOutput = 1;
+        public static double kIntakeFlipMinOutput = -1;
+        public static double kIntakeFlipInEncoder = 0.0;
+        public static double kIntakeFlipOutEncoder = 0.0;
+        
+        public static double kIntakeColorThesholdR = 0;
+        public static double kIntakeColorThesholdG = 0;
+        public static double kIntakeColorThesholdB = 0;
+        public static double kIntakeColorThesholdIR = 0;
+        public static double kIntakeColorThesholdProximity = 0;
+        public static double kShooterColorThesholdR = 0;
+        public static double kShooterColorThesholdG = 0;
+        public static double kShooterColorThesholdB = 0;
+        public static double kShooterColorThesholdIR = 0;
+        public static double kShooterColorThesholdProximity = 0;
     }
     public static final class ClimberConstants {
         public static boolean kHasClimber = false;
@@ -336,6 +375,7 @@ public abstract class Constants {
             ColorShim.kGreen,
             ColorShim.kYellow,
             ColorShim.kOrange,
+            ColorShim.kPurple
         };
     }
 }
