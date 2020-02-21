@@ -7,35 +7,75 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Intake;
 
 public class LoadNextBall extends CommandBase {
   Intake intake;
-  int stage;
+  boolean hadBall;
+  double oldPosition;
+
   /**
    * Creates a new LoadNextBall.
    */
   public LoadNextBall(Intake intake) {
+    addRequirements(intake);
     this.intake = intake;
+    Shuffleboard.getTab("Intake").addString("Target", ()->{return "Target: "+oldPosition+", At: "+newPos;});
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    stage = 0;
+    hadBall = intake.ballInIntake();
+    oldPosition = intake.getConveyorPosition() - 1000;
+    fifth = false;
   }
-
+  boolean fifth;
+  double newPos;
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    intake.powerConveyor(1);
-    // if (stage == 1) {
-    //   intake.powerConveyor(0.5);
-    // }
-    // else {
-    //   intake.powerConveyor(1);
-    // }
+    //intake.powerConveyor(1);
+    boolean currentBall = intake.ballInIntake();
+    int status = intake.getBallsInRobot();
+    double power = 0;
+    newPos = intake.getConveyorPosition();
+    if (status == 4) {
+      if ((oldPosition + 45.0) < newPos) {
+        power = 1;
+      }
+      else {
+        power = 0;
+      }
+      if (currentBall) {
+        intake.addBallsInRobot(1);
+        oldPosition = newPos;
+      }
+    }
+    else if (status == 5) {
+      if ((oldPosition + 15.0) > newPos) {
+        power = 1;
+      }
+      else {
+        power = 0;
+      }
+    }
+    else {
+      if (hadBall && !currentBall) {
+        intake.addBallsInRobot(1);
+        oldPosition = newPos;
+      }
+      if (currentBall || ((status!=0) && (oldPosition + 5.0) > newPos)) {
+        power = 1;
+      }
+      else {
+        power = 0;
+      }
+    }
+    intake.powerConveyor(power);
+    hadBall = currentBall;
   }
 
   // Called once the command ends or is interrupted.
@@ -47,9 +87,6 @@ public class LoadNextBall extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if (stage == 1 ^ intake.ballInIntake()) {
-      stage++;
-    }
-    return stage>=2;
+    return false;
   }
 }

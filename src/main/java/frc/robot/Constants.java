@@ -47,9 +47,10 @@ public abstract class Constants {
                 DriveConstants.kHasGyro = true;
                 DriveConstants.kHasPixy = false;
                 ControlPanelConstants.kHasControlPanel = false;
-                ClimberConstants.kHasClimber = false;
+                ClimberConstants.kHasClimber = true;
                 IntakeConstants.kHasIntake = true;
                 ShooterConstants.kHasShooter = true;
+                LEDConstants.kHasLEDs = false;
 
                 //CAN WIRING:
                 ShooterConstants.kShooterMotor1Port = 18;
@@ -99,15 +100,32 @@ public abstract class Constants {
                 DriveConstants.kGyroReversed = true;
 
                 //INTAKE CONSTANTS
-                IntakeConstants.kIntakeFlipP = 0.065;
-                IntakeConstants.kIntakeFlipI = 1e-4;
-                IntakeConstants.kIntakeFlipD = 1;
+                IntakeConstants.kIntakeFlipP = 0.04;
+                IntakeConstants.kIntakeFlipI = 1e-5;
+                IntakeConstants.kIntakeFlipD = 0.2;
                 IntakeConstants.kIntakeFlipIz = 0;
                 IntakeConstants.kIntakeFlipFF = 0;
                 IntakeConstants.kIntakeFlipMaxOutput = 1;
                 IntakeConstants.kIntakeFlipMinOutput = -1;
                 IntakeConstants.kIntakeFlipInEncoder = 0.0;
-                IntakeConstants.kIntakeFlipOutEncoder = -51.0;
+                IntakeConstants.kIntakeFlipOutEncoder = -50.0;
+                
+                IntakeConstants.kIntakeColorThesholdR = 1200;
+                IntakeConstants.kIntakeColorThesholdG = 2200;
+                IntakeConstants.kIntakeColorThesholdB = 0;
+                IntakeConstants.kIntakeColorThesholdIR = 0;
+                IntakeConstants.kIntakeColorThesholdProximity = 350;
+
+                //SHOOTER CONSTANTS
+                
+                ShooterConstants.kShooterP = 6e-2; 
+                ShooterConstants.kShooterI = 0;
+                ShooterConstants.kShooterD = 0; 
+                ShooterConstants.kShooterIz = 0; 
+                ShooterConstants.kShooterFF = 0.000015; 
+                ShooterConstants.kShooterMaxOutput = 1; 
+                ShooterConstants.kShooterMinOutput = -1;
+                ShooterConstants.kMaxRPM = 5700;
 
                 ShooterConstants.kMaxTurretAngle = 90;
                 ShooterConstants.kMinTurretAngle = -90;
@@ -295,6 +313,7 @@ public abstract class Constants {
     }
     public static final class ShooterConstants {
         public static boolean kHasShooter = false;
+        public static boolean kHasTurret = false;
         
         public static int kShooterMotor1Port = 7;//Shooter 1 = left
         public static int kShooterMotor2Port = 7;//Shooter 2 = right
@@ -303,12 +322,21 @@ public abstract class Constants {
         public static int kHoodAngleServo1Port = 9;
         public static int kHoodAngleServo2Port = 9;
 
-        public static double kP = 0.1;
+        public static double kP = 0.02;
         public static double kFF = 0.05;
         public static double kChassisMultiplier = 2.0;
         public static double kAimingThreshold = 1.0;
         public static double kMaxTurretAngle = 90.0;
         public static double kMinTurretAngle = -90.0;
+
+        public static double kShooterP = 6e-5; 
+        public static double kShooterI = 0;
+        public static double kShooterD = 0; 
+        public static double kShooterIz = 0; 
+        public static double kShooterFF = 0.000015; 
+        public static double kShooterMaxOutput = 1; 
+        public static double kShooterMinOutput = -1;
+        public static double kMaxRPM = 5700;
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
@@ -318,7 +346,7 @@ public abstract class Constants {
         public static int kConveyorMotor1Port = 7;
         public static int kConveyorMotor2Port = 7;
 
-        public static double kIntakeFlipP = 0.085;
+        public static double kIntakeFlipP = 0.0001;
         public static double kIntakeFlipI = 1e-4;
         public static double kIntakeFlipD = 1;
         public static double kIntakeFlipIz = 0;

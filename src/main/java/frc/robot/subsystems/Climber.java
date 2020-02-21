@@ -27,11 +27,19 @@ public class Climber extends SubsystemBase {
     if (ClimberConstants.kHasClimber) {
       climbMotor1 = new CANSparkMax(ClimberConstants.kClimberMotor1Port, MotorType.kBrushless);
       climbMotor2 = new CANSparkMax(ClimberConstants.kClimberMotor2Port, MotorType.kBrushless);
+      climbMotor1.setInverted(true);
+      climbMotor2.setInverted(false);
     }
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+  }
+  public void set(double speed){
+    if (ClimberConstants.kHasClimber) {
+      climbMotor1.set(speed);
+      climbMotor2.set(speed);
+    }
   }
 }

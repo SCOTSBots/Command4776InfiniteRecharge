@@ -8,7 +8,9 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANEncoder;
+import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -37,6 +39,9 @@ public class Shooter extends SubsystemBase {
   CANEncoder shooterEncoder2;
   CANEncoder turretEncoder;
 
+  CANPIDController shooterPID1;
+  CANPIDController shooterPID2;
+
   Servo hoodAngleServo1;
   Servo hoodAngleServo2;
 
@@ -48,6 +53,7 @@ public class Shooter extends SubsystemBase {
   NetworkTableEntry tx;
   NetworkTableEntry ty;
   NetworkTableEntry ta;
+  NetworkTableEntry pipeline;
 
   /**
    * Creates a new Shooter.
@@ -64,13 +70,29 @@ public class Shooter extends SubsystemBase {
       shooterMotor2.setIdleMode(IdleMode.kCoast);
       shooterMotor1.setInverted(true);
       shooterMotor2.setInverted(false);
+      shooterPID1 = shooterMotor1.getPIDController();
+      shooterPID2 = shooterMotor2.getPIDController();
+
+      shooterPID1.setP(ShooterConstants.kShooterP);
+      shooterPID1.setI(ShooterConstants.kShooterI);
+      shooterPID1.setD(ShooterConstants.kShooterD);
+      shooterPID1.setIZone(ShooterConstants.kShooterIz);
+      shooterPID1.setFF(ShooterConstants.kShooterFF);
+      shooterPID1.setOutputRange(ShooterConstants.kShooterMinOutput, ShooterConstants.kShooterMaxOutput);
       
+      shooterPID2.setP(ShooterConstants.kShooterP);
+      shooterPID2.setI(ShooterConstants.kShooterI);
+      shooterPID2.setD(ShooterConstants.kShooterD);
+      shooterPID2.setIZone(ShooterConstants.kShooterIz);
+      shooterPID2.setFF(ShooterConstants.kShooterFF);
+      shooterPID2.setOutputRange(ShooterConstants.kShooterMinOutput, ShooterConstants.kShooterMaxOutput);
+
       // turretMotor = new CANSparkMax(ShooterConstants.kTurretMotorPort, MotorType.kBrushless);
       // turretMotor.setIdleMode(IdleMode.kBrake);
       // turretEncoder = turretMotor.getEncoder();
 
-      // hoodAngleServo1 = new Servo(ShooterConstants.kHoodAngleServo1Port);
-      // hoodAngleServo2 = new Servo(ShooterConstants.kHoodAngleServo2Port);
+      hoodAngleServo1 = new Servo(ShooterConstants.kHoodAngleServo1Port);
+      hoodAngleServo2 = new Servo(ShooterConstants.kHoodAngleServo2Port);
 
       //Get the Network Tables for the limelight
       table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -79,19 +101,21 @@ public class Shooter extends SubsystemBase {
       NetworkTableEntry ledMode = table.getEntry("ledMode");
       //Get the Network Table Entry that controls the camera stream output see we can change the PnP
       NetworkTableEntry stream = table.getEntry("stream");
+      pipeline = table.getEntry("pipeline");
+      setZoomPipeline(1);
       //Add togglers for the NT entries
       ShuffleboardHelper.AddToggle("Limelight", "LEDMode", ledMode::setDouble, new Toggle<Integer>(1, 3));
       //ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", stream::setDouble, new Toggle<Integer>(1, 2));
 
-      //ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
-      ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, (x)->{
-        hoodAngleServo1.set(x);
-        //hoodAngleServo2.set(x);
-      });
-      ShuffleboardHelper.AddOutput(this, "Turret Power", 0, 1, (x)->{
-        System.out.println("Set power for "+x);
-        turretMotor.set(x);
-      });
+      // ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
+      // ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, (x)->{
+      //   hoodAngleServo1.set(x);
+      //   //hoodAngleServo2.set(x);
+      // });
+      // ShuffleboardHelper.AddOutput(this, "Turret Power", 0, 1, (x)->{
+      //   System.out.println("Set power for "+x);
+      //   turretMotor.set(x);
+      // });
 
       tv = table.getEntry("tv");
       tx = table.getEntry("tx");
@@ -147,26 +171,47 @@ public class Shooter extends SubsystemBase {
   public void periodic() {
     // Calculate the limelight distance
   }
+  public void setSpeed(double speed) {
+    hoodAngleServo1.set(speed);
+    hoodAngleServo2.set(1 - speed);
+  }
 
   public double getLimelightDistance() {
     //System.out.println("v="+tv.getDouble(0.0));
     if (tv.getDouble(0.0) > 0.9) {
-      double fixedCameraAngle = 14;//degrees
+      double fixedCameraAngle = 27.9;//degrees was 17.6
+      //27.9
       double cameraReadingAngle = ty.getDouble(0.0);//degrees
       double fixedCameraHeight = 0.923925;//meters
-      double fixedGoalHeight = 2.49936;//meters
+      double fixedGoalHeight = 2.49555;//meters
       double distance = (fixedGoalHeight - fixedCameraHeight) / 
       (Math.tan(Math.toRadians(cameraReadingAngle + fixedCameraAngle)));//meters
       return distance;
     }
     else {
-      return 0.0;
+      return -10.0;
     }
   }
 
   public void powerShooter(double speed) {
+    speed = atSpeed()?0:speed;
+
     shooterMotor1.set(speed);
     shooterMotor2.set(speed);
+  }
+  public void powerShooter(boolean power) {
+    double speed = power? 4750 :0;
+    if (power) {
+      shooterPID1.setReference(speed, ControlType.kVelocity);
+      shooterPID2.setReference(speed, ControlType.kVelocity);
+    }
+    else {
+      shooterMotor1.set(0);
+      shooterMotor2.set(0);
+    }
+  }
+  public boolean atSpeed() {
+    return shooterEncoder1.getVelocity() > 4750;
   }
 
   /**
@@ -182,10 +227,10 @@ public class Shooter extends SubsystemBase {
         double y = ty.getDouble(0.0);
         double area = ta.getDouble(0.0);
         
-        SmartDashboard.putBoolean("LimelightTargetFound", true);
-        SmartDashboard.putNumber("LimelightX", x);
-        SmartDashboard.putNumber("LimelightY", y);
-        SmartDashboard.putNumber("LimelightArea", area);
+        // SmartDashboard.putBoolean("LimelightTargetFound", true);
+        // SmartDashboard.putNumber("LimelightX", x);
+        // SmartDashboard.putNumber("LimelightY", y);
+        // SmartDashboard.putNumber("LimelightArea", area);
   
         if (Math.abs(x) < ShooterConstants.kAimingThreshold) {
           //Target is within threshold, go ahead and shoot
@@ -195,12 +240,17 @@ public class Shooter extends SubsystemBase {
         else {
           //Target is not within threshold, rotate the turret
           double turn = ShooterConstants.kP*x + ((x>0)? -ShooterConstants.kFF : ShooterConstants.kFF);
-          boolean driveChassis = rotate(turn);
-          if (driveChassis) {
-            return turn * ShooterConstants.kChassisMultiplier;
+          if (ShooterConstants.kHasTurret) {
+            boolean driveChassis = rotate(turn);
+            if (driveChassis) {
+              return turn * ShooterConstants.kChassisMultiplier;
+            }
+            else {
+              return 0;
+            }
           }
           else {
-            return 0;
+            return turn;
           }
         }
       }
@@ -212,5 +262,8 @@ public class Shooter extends SubsystemBase {
     else {
       return 0;
     }
+  }
+  public void setZoomPipeline(double level) {
+    pipeline.setDouble(level);
   }
 }

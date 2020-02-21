@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.util.ColorShim;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.ClimberConstants;
 import frc.robot.Constants.ControlPanelConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.IntakeConstants;
@@ -36,6 +37,7 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Tools.MathTools;
 import frc.robot.Tools.DataTools.Pair;
+import frc.robot.commands.LoadNextBall;
 import frc.robot.pixy.Pixy2CCC.Block;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.ControlPanelController;
@@ -150,36 +152,53 @@ public class RobotContainer {
     if (IntakeConstants.kHasIntake) {
       new JoystickButton(m_manipulatorJoystick, Button.kX.value).whenPressed(()->{m_intake.setFlipper(false);});
       
-      new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
-      new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
+      //new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
+      //new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
       new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
+      LoadNextBall lnb = new LoadNextBall(m_intake);
       new JoystickButton(m_manipulatorJoystick, Button.kBumperLeft.value).whenPressed(()->{
         m_intake.setFlipper(true);
+        lnb.schedule();
       }).whenReleased(()->{
         //m_intake.setFlipper(false);
         m_intake.powerIntake(0);
+        lnb.cancel();
       }).whileActiveContinuous(()->{
-        m_intake.powerIntake(1);
+        m_intake.powerIntake(0.7);
       });
       new JoystickButton(m_manipulatorJoystick, Button.kBumperRight.value).whenReleased(()->{
         m_intake.powerIntake(0);
       }).whileActiveContinuous(()->{
-        m_intake.powerIntake(-1);
+        m_intake.powerIntake(-0.7);
+      });
+      new JoystickButton(m_manipulatorJoystick, Button.kB.value).whenPressed(()->{
+        m_intake.setBallsInRobot(0);
       });
       
       m_intake.setDefaultCommand(new RunCommand(()->{
         //if (m_manipulatorJoystick.getYButton()) {
           double speed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft) );
           double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
-          
-          m_intake.powerConveyor(speed-aspeed);
+          boolean ready = m_shooter.atSpeed();
+          //m_intake.powerConveyor(ready?1:0);
+          m_intake.powerConveyor(ready?1:speed-aspeed);
         
       },m_intake));
     }
     if (ShooterConstants.kHasShooter) {
       m_shooter.setDefaultCommand(new RunCommand(()->{
         double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
-        m_shooter.powerShooter(speed);
+        m_shooter.powerShooter(speed>0.5);
+        // boolean down = m_manipulatorJoystick.getAButtonPressed();
+        // boolean up = m_manipulatorJoystick.getStartButtonPressed();
+        // m_shooter.setSpeed(up?0:down?1:0.5);
+
+        int pov = m_manipulatorJoystick.getPOV();
+        System.out.println("POV: "+pov);
+        // if (pov == 0) {
+
+        // }
+        // else if (pov == )
       },m_shooter));
     }
     if (LEDConstants.kHasLEDs) {
@@ -218,9 +237,12 @@ public class RobotContainer {
         m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
       },m_shooter, m_driveTrain);
     }
-    if (IntakeConstants.kHasIntake) {
-      
-      //new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(()->{});
+    if (ClimberConstants.kHasClimber) {
+      m_climber.setDefaultCommand(new RunCommand(()->{
+        double up = m_driverJoystick.getTriggerAxis(GenericHID.Hand.kLeft);
+        double down = m_driverJoystick.getTriggerAxis(GenericHID.Hand.kRight);
+        m_climber.set(up-down);
+      }, m_climber));
     }
   }
 
@@ -233,7 +255,8 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() throws IOException {
     // An ExampleCommand will run in autonomous
-    return MultiRamseteCommands("CircleRight");
+    //return MultiRamseteCommands("CircleRight");
+    return null;
     //return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
     //return MultiRamseteCommands("DirectTrenchAuto","DirectTrenchPickup","one","three","superAuto");
   }
