@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
+import frc.robot.Constants;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Tools;
 import frc.robot.Constants.DriveConstants;
@@ -93,12 +94,14 @@ public class DriveTrain extends SubsystemBase {
       m_rightFrontMotor.setIdleMode(IdleMode.kBrake);
       m_rightBackMotor.setIdleMode(IdleMode.kBrake);
 
-      ShuffleboardHelper.addSparkMaxLayout("Drive Train Motors", Map.of(
-        m_leftFrontMotor, "Left Front Motor",
-        m_leftBackMotor, "Left Back Motor",
-        m_rightFrontMotor, "Right Front Motor",
-        m_rightBackMotor, "Right Back Motor"
-      ));
+      if (DriveConstants.kDebug) {
+        ShuffleboardHelper.addSparkMaxLayout("Drive Train Motors", Map.of(
+          m_leftFrontMotor, "Left Front Motor",
+          m_leftBackMotor, "Left Back Motor",
+          m_rightFrontMotor, "Right Front Motor",
+          m_rightBackMotor, "Right Back Motor"
+        ));
+      }
     }
     else {
       m_leftFrontMotor = null;
@@ -215,10 +218,12 @@ public class DriveTrain extends SubsystemBase {
         speeds.leftMetersPerSecond);
     double rightOutput = DriveConstants.kRightPIDController.calculate(-m_rightEncoder.getVelocity(),
         speeds.rightMetersPerSecond);
-        System.out.println("L: "+speeds.leftMetersPerSecond+", R: "+speeds.rightMetersPerSecond+
-        ", FFL: "+leftFeedforward+", FFR: "+rightFeedforward+
-        ", LV: "+m_leftEncoder.getVelocity()+", RV: "+m_rightEncoder.getVelocity()+
-        ", LO: "+leftOutput+", RO: "+rightOutput);
+        if (DriveConstants.kDebug) {
+          System.out.println("L: "+speeds.leftMetersPerSecond+", R: "+speeds.rightMetersPerSecond+
+          ", FFL: "+leftFeedforward+", FFR: "+rightFeedforward+
+          ", LV: "+m_leftEncoder.getVelocity()+", RV: "+m_rightEncoder.getVelocity()+
+          ", LO: "+leftOutput+", RO: "+rightOutput);
+        }
     
     tankDriveVolts(leftOutput + leftFeedforward, rightOutput + rightFeedforward);
   }
@@ -271,6 +276,10 @@ public class DriveTrain extends SubsystemBase {
   public void zeroHeading() {
     m_gyro.reset();
   }
+  boolean backwards  = false;
+  public void setDirection(boolean backwards) {
+    this.backwards = backwards;
+  }
 
   /**
    * Returns the heading of the robot.
@@ -280,7 +289,10 @@ public class DriveTrain extends SubsystemBase {
   public double getHeading() {
     if (m_gyro == null)
       return 0;
-    return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+    if (backwards) 
+      return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+    else
+      return Math.IEEEremainder(180 - m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
   /**

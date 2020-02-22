@@ -19,10 +19,10 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Tools.DataTools.Toggle;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.networktables.NetworkTable;
 
@@ -98,14 +98,14 @@ public class Shooter extends SubsystemBase {
       table = NetworkTableInstance.getDefault().getTable("limelight");
 
       //Get the Network Table Entry that controls the LEDs on the limelight so we can turn them on/off
-      NetworkTableEntry ledMode = table.getEntry("ledMode");
+      LEDMode = table.getEntry("ledMode");
       //Get the Network Table Entry that controls the camera stream output see we can change the PnP
-      NetworkTableEntry stream = table.getEntry("stream");
+      cameraMode = table.getEntry("stream");
       pipeline = table.getEntry("pipeline");
       setZoomPipeline(1);
       //Add togglers for the NT entries
-      ShuffleboardHelper.AddToggle("Limelight", "LEDMode", ledMode::setDouble, new Toggle<Integer>(1, 3));
-      //ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", stream::setDouble, new Toggle<Integer>(1, 2));
+      ShuffleboardHelper.AddToggle("Limelight", "LEDMode", LEDMode::setDouble, new Toggle<Integer>(1, 3));
+      //ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", cameraMode::setDouble, new Toggle<Integer>(1, 2));
 
       // ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
       // ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, (x)->{
@@ -122,10 +122,12 @@ public class Shooter extends SubsystemBase {
       ty = table.getEntry("ty");
       ta = table.getEntry("ta");
 
-      
-      Shuffleboard.getTab("Shooter").addNumber("Shooter1 Vel", shooterEncoder1::getVelocity);
-      Shuffleboard.getTab("Shooter").addNumber("Shooter2 Vel", shooterEncoder2::getVelocity);
-      Shuffleboard.getTab("Shooter").addNumber("Limelight Distance", this::getLimelightDistance);
+      if (ShooterConstants.kDebug) {
+        Shuffleboard.getTab("Shooter").addNumber("Shooter1 Vel", shooterEncoder1::getVelocity);
+        Shuffleboard.getTab("Shooter").addNumber("Shooter2 Vel", shooterEncoder2::getVelocity);
+        Shuffleboard.getTab("Shooter").addNumber("Limelight Distance", this::getLimelightDistance);  
+      }
+      enableLimelight(false);
     }
   }
 
@@ -167,9 +169,30 @@ public class Shooter extends SubsystemBase {
   double encoderToDegrees(double counts) {
     return counts;
   }
+  int time=0;
+  int delay=100;
   @Override
   public void periodic() {
-    // Calculate the limelight distance
+    if (time++ > delay) {
+      double mode = LEDMode.getDouble(0.0);
+      if (mode < 0.1){
+        enableLimelight(limelightOn);
+      }
+      else {
+        if (limelightOn) {
+          if (mode > 3.1 || mode < 2.9) {
+            System.out.println("trying to turn it on");
+            enableLimelight(limelightOn);
+          }
+        }
+        else {
+          if (mode > 1.1 || mode < 0.9) {
+            System.out.println("trying to turn it off");
+            enableLimelight(limelightOn);
+          }
+        }
+      }
+    }
   }
   public void setSpeed(double speed) {
     hoodAngleServo1.set(speed);
@@ -200,7 +223,7 @@ public class Shooter extends SubsystemBase {
     shooterMotor2.set(speed);
   }
   public void powerShooter(boolean power) {
-    double speed = power? 4750 :0;
+    double speed = power? 5000 :0;
     if (power) {
       shooterPID1.setReference(speed, ControlType.kVelocity);
       shooterPID2.setReference(speed, ControlType.kVelocity);
@@ -221,6 +244,8 @@ public class Shooter extends SubsystemBase {
    */
   public double AutoAimAndShoot() {
     if (ShooterConstants.kHasShooter) {
+      if (!limelightOn)
+        enableLimelight(true);
       double v = tv.getDouble(0.0);
       if (v > 0) {
         double x = tx.getDouble(0.0);
@@ -262,6 +287,11 @@ public class Shooter extends SubsystemBase {
     else {
       return 0;
     }
+  }
+  boolean limelightOn = false;
+  public void enableLimelight(boolean on) {
+    limelightOn = on;
+    LEDMode.setDouble(on?3:1);
   }
   public void setZoomPipeline(double level) {
     pipeline.setDouble(level);

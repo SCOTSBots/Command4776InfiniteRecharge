@@ -10,12 +10,14 @@ package frc.robot.subsystems;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ColorSensorV3;
 import com.revrobotics.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.MultiplexedColorSensor;
 import frc.robot.Constants.IntakeConstants;
 
@@ -65,19 +67,38 @@ public class Intake extends SubsystemBase {
       conveyorMotor2Encoder = conveyorMotor2.getEncoder();
 
       flipperOut = false;
-      Shuffleboard.getTab("Intake").addNumber("C1 Pos", conveyorMotor1Encoder::getPosition);
-      Shuffleboard.getTab("Intake").addNumber("C2 Pos", conveyorMotor2Encoder::getPosition);
-      Shuffleboard.getTab("Intake").addNumber("Flipper Pos", intakeFlipEncoder::getPosition);
-      // color6 = new MultiplexedColorSensor(I2C.Port.kOnboard, 6);
-      // color5 = new MultiplexedColorSensor(I2C.Port.kOnboard, 5);
-      
-      intakeColorSensor = new MultiplexedColorSensor(I2C.Port.kOnboard, 4);
-      Shuffleboard.getTab("Intake").addNumber("Color4 Red", intakeColorSensor::getRed);
-      Shuffleboard.getTab("Intake").addNumber("Color4 Green", intakeColorSensor::getGreen);
-      Shuffleboard.getTab("Intake").addNumber("Color4 Blue", intakeColorSensor::getBlue);
-      Shuffleboard.getTab("Intake").addNumber("Color4 Proximity", intakeColorSensor::getProximity);
-      Shuffleboard.getTab("Intake").addNumber("Color4 IR", intakeColorSensor::getIR);
-      Shuffleboard.getTab("Intake").addBoolean("Color4 INTAKE", this::ballInIntake);
+      boolean tester = false;
+      if (tester) {
+        ColorSensorV3 color = new ColorSensorV3(I2C.Port.kOnboard);
+        Shuffleboard.getTab("Intake").addNumber("ColorTester Red", color::getRed);
+        Shuffleboard.getTab("Intake").addNumber("ColorTester Green", color::getGreen);
+        Shuffleboard.getTab("Intake").addNumber("ColorTester Blue", color::getBlue);
+        Shuffleboard.getTab("Intake").addNumber("ColorTester Proximity", color::getProximity);
+        Shuffleboard.getTab("Intake").addNumber("ColorTester IR", color::getIR);
+      }
+      else {
+
+        intakeColorSensor = new MultiplexedColorSensor(I2C.Port.kOnboard, 4);
+        shooterColorSensor = new MultiplexedColorSensor(I2C.Port.kOnboard, 2);
+        if (IntakeConstants.kDebug) {
+          Shuffleboard.getTab("Intake").addNumber("C1 Pos", conveyorMotor1Encoder::getPosition);
+          Shuffleboard.getTab("Intake").addNumber("C2 Pos", conveyorMotor2Encoder::getPosition);
+          Shuffleboard.getTab("Intake").addNumber("Flipper Pos", intakeFlipEncoder::getPosition);
+          Shuffleboard.getTab("Intake").addNumber("Color4 Red", intakeColorSensor::getRed);
+          Shuffleboard.getTab("Intake").addNumber("Color4 Green", intakeColorSensor::getGreen);
+          Shuffleboard.getTab("Intake").addNumber("Color4 Blue", intakeColorSensor::getBlue);
+          Shuffleboard.getTab("Intake").addNumber("Color4 Proximity", intakeColorSensor::getProximity);
+          Shuffleboard.getTab("Intake").addNumber("Color4 IR", intakeColorSensor::getIR);
+          Shuffleboard.getTab("Intake").addBoolean("Color4 INTAKE", this::ballInIntake);
+          Shuffleboard.getTab("Intake").addNumber("Color2 Red", shooterColorSensor::getRed);
+          Shuffleboard.getTab("Intake").addNumber("Color2 Green", shooterColorSensor::getGreen);
+          Shuffleboard.getTab("Intake").addNumber("Color2 Blue", intakeColorSensor::getBlue);
+          Shuffleboard.getTab("Intake").addNumber("Color2 Proximity", shooterColorSensor::getProximity);
+          Shuffleboard.getTab("Intake").addNumber("Color2 IR", shooterColorSensor::getIR);
+          Shuffleboard.getTab("Intake").addBoolean("Color2 SHOOTER", this::ballInShooter);
+          Shuffleboard.getTab("Intake").addNumber("Balls in Intake!", this::getBallsInRobot);
+        }
+      }
     }
   }
   /**
@@ -127,6 +148,35 @@ public class Intake extends SubsystemBase {
     if (IntakeConstants.kHasIntake) {
       conveyorMotor1.set(speed);
       conveyorMotor2.set(speed);
+      // setFlipper(speed > 0);
+    }
+  }
+  boolean hadShooter = false;
+  public boolean updateShooter() {
+    boolean current = ballInShooter();
+    if (hadShooter && !current) {
+      addBallsInRobot(-1);
+      hadShooter = current;
+      System.out.println("Lost a ball!");
+      return true;
+    }
+    else {
+      hadShooter = current;
+      return false;
+    }
+  }
+  boolean hadIntake = false;
+  public boolean updateIntake() {
+    boolean current = ballInIntake();
+    if (hadIntake && !current) {
+      addBallsInRobot(1);
+      System.out.println("Got a ball!");
+      hadIntake = current;
+      return true;
+    }
+    else {
+      hadIntake = current;
+      return false;
     }
   }
   public int getBallsInRobot() {
@@ -141,10 +191,10 @@ public class Intake extends SubsystemBase {
   public boolean ballInIntake() {
     boolean r = intakeColorSensor.getRed() > IntakeConstants.kIntakeColorThesholdR;
     boolean g = intakeColorSensor.getGreen() > IntakeConstants.kIntakeColorThesholdG;
-    boolean b = true;//intakeColorSensor.getBlue() > IntakeConstants.kIntakeColorThesholdB;
-    boolean ir = true;//intakeColorSensor.getIR() > IntakeConstants.kIntakeColorThesholdIR;
-    boolean proximity = true;//intakeColorSensor.getProximity() > IntakeConstants.kIntakeColorThesholdProximity;
-    boolean in = r && g && b && ir && proximity;
+    boolean b = intakeColorSensor.getBlue() > IntakeConstants.kIntakeColorThesholdB;
+    boolean ir = intakeColorSensor.getIR() > IntakeConstants.kIntakeColorThesholdIR;
+    boolean proximity = intakeColorSensor.getProximity() > IntakeConstants.kIntakeColorThesholdProximity;
+    boolean in = r && g;
 
     return in;
   }
@@ -154,7 +204,7 @@ public class Intake extends SubsystemBase {
     boolean b = shooterColorSensor.getBlue() > IntakeConstants.kShooterColorThesholdB;
     boolean ir = shooterColorSensor.getIR() > IntakeConstants.kShooterColorThesholdIR;
     boolean proximity = shooterColorSensor.getProximity() > IntakeConstants.kShooterColorThesholdProximity;
-    return r && g && b && ir && proximity;
+    return proximity;
   }
 
   @Override

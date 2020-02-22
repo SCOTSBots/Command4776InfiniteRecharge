@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.ColorShim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
+import frc.robot.Constants;
 import frc.robot.Constants.LEDConstants;
 import frc.robot.Tools.MathTools;
 import frc.robot.Tools.DataTools.Triple;
@@ -337,7 +338,9 @@ public class LEDController extends SubsystemBase {
       }
       if (inEndGame) {
         double timeLeft = startEndgame - timer.get();
-        System.out.println("time left: "+timeLeft);
+        if (LEDConstants.kDebug) {
+          System.out.println("time left: "+timeLeft);
+        }
         if (timeLeft > endGame / 2) {
           filledColor = timeLeft%1>0.5?ColorShim.kRed:ColorShim.kBlack;
         }

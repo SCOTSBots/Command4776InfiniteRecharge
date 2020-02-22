@@ -36,6 +36,7 @@ public class MultiplexedColorSensor {
   private ColorSensorV3 sensor;
   // What port on the multiplexer the color sensor is plugged into.
   private final int port;
+  static int currentPort;
 
   /**
    * Create a multiplexed color sensor.
@@ -60,7 +61,10 @@ public class MultiplexedColorSensor {
    * using the color sensor.
    */
   private void setChannel() {
-    multiplexer.write(kMultiplexerAddress, 1 << port);
+    if (port != currentPort) {
+      currentPort = port;
+      multiplexer.write(kMultiplexerAddress, 1 << port);
+    }
   }
 
   /*-----------------------------------------------------------------------*/

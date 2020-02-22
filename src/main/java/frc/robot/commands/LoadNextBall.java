@@ -22,7 +22,7 @@ public class LoadNextBall extends CommandBase {
   public LoadNextBall(Intake intake) {
     addRequirements(intake);
     this.intake = intake;
-    Shuffleboard.getTab("Intake").addString("Target", ()->{return "Target: "+oldPosition+", At: "+newPos;});
+    //Shuffleboard.getTab("Intake").addString("Target", ()->{return "Target: "+oldPosition+", At: "+newPos;});
   }
 
   // Called when the command is initially scheduled.
@@ -63,8 +63,7 @@ public class LoadNextBall extends CommandBase {
       }
     }
     else {
-      if (hadBall && !currentBall) {
-        intake.addBallsInRobot(1);
+      if (intake.updateIntake()) {
         oldPosition = newPos;
       }
       if (currentBall || ((status!=0) && (oldPosition + 5.0) > newPos)) {

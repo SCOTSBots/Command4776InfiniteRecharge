@@ -53,7 +53,10 @@ public class Robot extends TimedRobot {
     //CameraServer.getInstance().startAutomaticCapture();
     Constants.GenerateConstants(RobotType.PracticeBot);
     m_robotContainer = new RobotContainer();
-    
+
+    //Add the USB Camera
+    CameraServer.getInstance().startAutomaticCapture();
+
     try {
       m_autonomousCommand = m_robotContainer.getAutonomousCommand();
       System.out.println("Successfully loaded auto program.");

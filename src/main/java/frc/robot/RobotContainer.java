@@ -37,6 +37,7 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Tools.MathTools;
 import frc.robot.Tools.DataTools.Pair;
+import frc.robot.commands.EasyIntake;
 import frc.robot.commands.LoadNextBall;
 import frc.robot.pixy.Pixy2CCC.Block;
 import frc.robot.subsystems.Climber;
@@ -48,10 +49,12 @@ import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
@@ -155,7 +158,9 @@ public class RobotContainer {
       //new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
       //new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
       new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
-      LoadNextBall lnb = new LoadNextBall(m_intake);
+      //Command lnb = new EasyIntake(m_intake);//new LoadNextBall(m_intake);
+      Command lnb = new LoadNextBall(m_intake);
+
       new JoystickButton(m_manipulatorJoystick, Button.kBumperLeft.value).whenPressed(()->{
         m_intake.setFlipper(true);
         lnb.schedule();
@@ -181,6 +186,8 @@ public class RobotContainer {
           double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
           boolean ready = m_shooter.atSpeed();
           //m_intake.powerConveyor(ready?1:0);
+          m_intake.updateIntake();
+          m_intake.updateShooter();
           m_intake.powerConveyor(ready?1:speed-aspeed);
         
       },m_intake));
@@ -188,13 +195,19 @@ public class RobotContainer {
     if (ShooterConstants.kHasShooter) {
       m_shooter.setDefaultCommand(new RunCommand(()->{
         double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
+        if (speed < -0.7) {
+
+          m_shooter.powerShooter(speed);
+        }else {
+          
         m_shooter.powerShooter(speed>0.5);
+        }
         // boolean down = m_manipulatorJoystick.getAButtonPressed();
         // boolean up = m_manipulatorJoystick.getStartButtonPressed();
         // m_shooter.setSpeed(up?0:down?1:0.5);
 
         int pov = m_manipulatorJoystick.getPOV();
-        System.out.println("POV: "+pov);
+        // System.out.println("POV: "+pov);
         // if (pov == 0) {
 
         // }
@@ -235,7 +248,9 @@ public class RobotContainer {
       new JoystickButton(m_manipulatorJoystick, Button.kA.value).whileHeld(()->{
         double chassisTurn = 10 * m_shooter.AutoAimAndShoot();
         m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
-      },m_shooter, m_driveTrain);
+      },m_shooter, m_driveTrain).whenReleased(()->{
+        m_shooter.enableLimelight(false);
+      });
     }
     if (ClimberConstants.kHasClimber) {
       m_climber.setDefaultCommand(new RunCommand(()->{
@@ -256,9 +271,57 @@ public class RobotContainer {
   public Command getAutonomousCommand() throws IOException {
     // An ExampleCommand will run in autonomous
     //return MultiRamseteCommands("CircleRight");
-    return null;
+    //return side();
+    //return basicAuto();
+    //We have 
+    return RapidShoot(3);
     //return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
     //return MultiRamseteCommands("DirectTrenchAuto","DirectTrenchPickup","one","three","superAuto");
+  }
+  private Command side() throws IOException {
+    SequentialCommandGroup c = new SequentialCommandGroup();
+    Command b = RamseteCommand("UltraTwank").deadlineWith(disableDevices());
+    // Command pickUpBalls = RamseteCommand("PICKUP BALLS").deadlineWith(
+    //   new EasyIntake(m_intake), 
+    //   new RunCommand(()->m_shooter.powerShooter(false)));
+    //Command shoot = 
+    //c.addCommands(RapidShoot(3),b,pickUpBalls,RapidShoot(0));//, pickUpBalls,RapidShoot());
+    c.addCommands(b,RapidShoot(3));
+    return c;
+  }
+  private Command basicAuto() throws IOException {
+    SequentialCommandGroup c = new SequentialCommandGroup();
+    Command b = RamseteCommand("Basic").deadlineWith(disableDevices());
+    Command pickUpBalls = RamseteCommand("PICKUP BALLS").deadlineWith(
+      new EasyIntake(m_intake), 
+      new RunCommand(()->m_shooter.powerShooter(false)));
+    //Command shoot = 
+    c.addCommands(RapidShoot(3),b,pickUpBalls,RapidShoot(0));//, pickUpBalls,RapidShoot());
+    return c;
+  }
+  private RunCommand disableDevices() {
+    return new RunCommand(()->{
+      m_intake.powerIntake(0);
+      m_intake.powerConveyor(0);
+      m_shooter.powerShooter(false);
+    });
+  }
+  private SequentialCommandGroup RapidShoot(int setBalls) {
+    return new RunCommand(()->{
+      if (setBalls >= 0) {
+        m_intake.setBallsInRobot(setBalls);
+      }
+      m_shooter.powerShooter(true);
+      m_intake.powerConveyor(m_intake.ballInShooter() || m_shooter.atSpeed()?1:0);
+      m_intake.powerIntake(0);
+      double chassisTurn = 0* m_shooter.AutoAimAndShoot();
+      m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
+    }, m_driveTrain, m_shooter, m_intake)
+    .withInterrupt(()->{
+      m_intake.updateShooter();
+      return m_intake.getBallsInRobot() <= 0;
+    }).withTimeout(7)
+    .andThen(()->m_shooter.enableLimelight(false));
   }
   SequentialCommandGroup MultiRamseteCommands (Map<String,Command> map) {
     SequentialCommandGroup c = new SequentialCommandGroup();
@@ -302,5 +365,63 @@ public class RobotContainer {
         m_driveTrain::tankDriveVolts,
         m_driveTrain
     ).andThen(() -> m_driveTrain.tankDriveVolts(0, 0)),jsonTrajectory);
+  }
+  private SequentialCommandGroup RamseteCommand(String file) throws IOException {
+    Trajectory jsonTrajectory = TrajectoryUtil.fromPathweaverJson(Paths.get(
+        "/home/lvuser/deploy/output/"+file+".wpilib.json"));
+    System.out.println("EasyRamseteCommand loaded \'"+file+"\' successfully.");
+    return new SequentialCommandGroup(
+      new InstantCommand(()->{
+        m_driveTrain.setDirection(false);
+        m_driveTrain.resetOdometry(jsonTrajectory.getInitialPose());
+      }, m_driveTrain),
+    new RamseteCommand(
+        jsonTrajectory,
+
+        m_driveTrain::getPose,
+        new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+        new SimpleMotorFeedforward(DriveConstants.ksVolts,
+                                   DriveConstants.kvVoltSecondsPerMeter,
+                                   DriveConstants.kaVoltSecondsSquaredPerMeter),
+        DriveConstants.kDriveKinematics,
+        m_driveTrain::getWheelSpeeds,
+        new PIDController(DriveConstants.kPDriveVel, 0, 0),
+        new PIDController(DriveConstants.kPDriveVel, 0, 0),
+        m_driveTrain::tankDriveVolts,
+        m_driveTrain
+    ),
+    new InstantCommand(()->{
+      m_driveTrain.tankDriveVolts(0, 0);
+    })
+    );
+  }
+  
+  private SequentialCommandGroup BackwardsRamseteCommand(String file) throws IOException {
+    Trajectory jsonTrajectory = TrajectoryUtil.fromPathweaverJson(Paths.get(
+        "/home/lvuser/deploy/output/"+file+".wpilib.json"));
+    System.out.println("EasyRamseteCommand loaded \'"+file+"\' successfully.");
+    return new SequentialCommandGroup(
+      new InstantCommand(()->{
+        m_driveTrain.setDirection(true);
+        m_driveTrain.resetOdometry(jsonTrajectory.getInitialPose());
+      }, m_driveTrain),
+    new RamseteCommand(
+        jsonTrajectory,
+        m_driveTrain::getPose,
+        new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+        new SimpleMotorFeedforward(DriveConstants.ksVolts,
+                                   DriveConstants.kvVoltSecondsPerMeter,
+                                   DriveConstants.kaVoltSecondsSquaredPerMeter),
+        DriveConstants.kDriveKinematics,
+        m_driveTrain::getWheelSpeeds,
+        new PIDController(DriveConstants.kPDriveVel, 0, 0),
+        new PIDController(DriveConstants.kPDriveVel, 0, 0),
+        m_driveTrain::tankDriveVolts,
+        m_driveTrain
+    ),
+    new InstantCommand(()->{
+      m_driveTrain.tankDriveVolts(0, 0);
+    })
+    );
   }
 }

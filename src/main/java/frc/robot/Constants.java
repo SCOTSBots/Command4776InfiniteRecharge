@@ -52,6 +52,13 @@ public abstract class Constants {
                 ShooterConstants.kHasShooter = true;
                 LEDConstants.kHasLEDs = false;
 
+                DriveConstants.kDebug = false;
+                ControlPanelConstants.kDebug = false;
+                ClimberConstants.kDebug = false;
+                IntakeConstants.kDebug = true;
+                ShooterConstants.kDebug = true;
+                LEDConstants.kDebug = false;
+
                 //CAN WIRING:
                 ShooterConstants.kShooterMotor1Port = 18;
                 ShooterConstants.kShooterMotor2Port = 6;
@@ -77,7 +84,7 @@ public abstract class Constants {
                 DriveConstants.kvVoltSecondsPerMeter = 2.78;
                 DriveConstants.kaVoltSecondsSquaredPerMeter = 0.409;
                 DriveConstants.kPDriveVel = 2.58;
-                DriveConstants.kTrackwidthMeters = 0.66;
+                DriveConstants.kTrackwidthMeters = 1.5;//TODO: put back;
                 DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
                     DriveConstants.kTrackwidthMeters);
                 DriveConstants.kFeedforward = new SimpleMotorFeedforward(
@@ -88,7 +95,7 @@ public abstract class Constants {
                 DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
                 DriveConstants.kMaxSpeedMetersPerSecond = 1.0;
                 DriveConstants.kMaxAccelerationMetersPerSecondSquared = 1.0;
-                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 2 * Math.PI;
+                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 0.5 * Math.PI;//TODO: Put back/tune
                 //DriveConstants.kRamseteB = 2;
                 //DriveConstants.kRamseteZeta = 0.7;
                 DriveConstants.kMaxRPM = 5700;
@@ -115,6 +122,12 @@ public abstract class Constants {
                 IntakeConstants.kIntakeColorThesholdB = 0;
                 IntakeConstants.kIntakeColorThesholdIR = 0;
                 IntakeConstants.kIntakeColorThesholdProximity = 350;
+
+                IntakeConstants.kShooterColorThesholdIR = 0;
+                IntakeConstants.kShooterColorThesholdG = 0;
+                IntakeConstants.kShooterColorThesholdB = 0;
+                IntakeConstants.kShooterColorThesholdIR = 0;
+                IntakeConstants.kShooterColorThesholdProximity = 200;
 
                 //SHOOTER CONSTANTS
                 
@@ -226,6 +239,7 @@ public abstract class Constants {
         public static boolean kHasDriveTrain = false;
         public static boolean kHasGyro = false;
         public static boolean kHasPixy = false;
+        public static boolean kDebug = false;
 
         // Feedforward constants
         public static double ksVolts = 0.146;
@@ -235,7 +249,7 @@ public abstract class Constants {
         // Example value only - as above, this must be tuned for your drive!
         public static double kPDriveVel = 2.59;
 
-        public static double kTrackwidthMeters = 0.66;
+        public static double kTrackwidthMeters = 1.5;//TODO: remove comment, calibrate0.66;
         public static DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(
                 kTrackwidthMeters);
         
@@ -292,6 +306,7 @@ public abstract class Constants {
     }
     public static final class ControlPanelConstants {
         public static boolean kHasControlPanel = false;
+        public static boolean kDebug = false;
         //What I2C port to plug the REV Color Sensor V3 into
         public static I2C.Port kColorSensorPort = I2C.Port.kOnboard;
         public static int kWheelRotatorMotorPort = 7;
@@ -314,6 +329,7 @@ public abstract class Constants {
     public static final class ShooterConstants {
         public static boolean kHasShooter = false;
         public static boolean kHasTurret = false;
+        public static boolean kDebug = false;
         
         public static int kShooterMotor1Port = 7;//Shooter 1 = left
         public static int kShooterMotor2Port = 7;//Shooter 2 = right
@@ -323,7 +339,7 @@ public abstract class Constants {
         public static int kHoodAngleServo2Port = 9;
 
         public static double kP = 0.02;
-        public static double kFF = 0.05;
+        public static double kFF = 0.075;
         public static double kChassisMultiplier = 2.0;
         public static double kAimingThreshold = 1.0;
         public static double kMaxTurretAngle = 90.0;
@@ -340,6 +356,7 @@ public abstract class Constants {
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
+        public static boolean kDebug = false;
         
         public static int kIntakeFlipMotorPort = 7;
         public static int kIntakeMotorPort = 7;
@@ -369,12 +386,15 @@ public abstract class Constants {
     }
     public static final class ClimberConstants {
         public static boolean kHasClimber = false;
+        public static boolean kDebug = false;
         
         public static int kClimberMotor1Port = 7;
         public static int kClimberMotor2Port = 7;
     }
     public static final class LEDConstants {
         public static boolean kHasLEDs = false;
+        public static boolean kDebug = false;
+        
         public static int kLEDCount = 72;//normally 72
         public static int kLEDPWMPort = 9;
 
