@@ -47,8 +47,11 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDController;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.*;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -56,6 +59,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -81,7 +85,7 @@ public class RobotContainer {
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    System.out.println("Hello and Welcome to Infinite Recharge! Starting up robot \""+Constants.RobotName+"\"!");
+    System.out.println("Hello aand Welcome to Infinite Recharge! Starting up robot \""+Constants.RobotName+"\"!");
     // Configure the button bindings
     configureButtonBindings();
 
@@ -130,9 +134,9 @@ public class RobotContainer {
           });
       };
       Runnable cheesyDrive = ()->{
-        double turn = m_driverJoystick.getX(GenericHID.Hand.kRight);
+        double turn = MathTools.deadzone(m_driverJoystick.getX(GenericHID.Hand.kRight));
         m_driveTrain.curvatureDrive(
-          -m_driverJoystick.getY(GenericHID.Hand.kLeft), 
+          -MathTools.deadzone(m_driverJoystick.getY(GenericHID.Hand.kLeft)), 
           turn, 
           m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
             m_driveTrain.tankDriveVolts(l*10, r*10);
@@ -157,7 +161,7 @@ public class RobotContainer {
       
       //new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
       //new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
-      new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
+      //new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
       //Command lnb = new EasyIntake(m_intake);//new LoadNextBall(m_intake);
       Command lnb = new LoadNextBall(m_intake);
 
@@ -169,16 +173,16 @@ public class RobotContainer {
         m_intake.powerIntake(0);
         lnb.cancel();
       }).whileActiveContinuous(()->{
-        m_intake.powerIntake(0.7);
+        m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7);
       });
       new JoystickButton(m_manipulatorJoystick, Button.kBumperRight.value).whenReleased(()->{
         m_intake.powerIntake(0);
       }).whileActiveContinuous(()->{
-        m_intake.powerIntake(-0.7);
+        m_intake.powerIntake(-1);
       });
-      new JoystickButton(m_manipulatorJoystick, Button.kB.value).whenPressed(()->{
-        m_intake.setBallsInRobot(0);
-      });
+      // new JoystickButton(m_manipulatorJoystick, Button.kB.value).whenPressed(()->{
+      //   m_intake.setBallsInRobot(0);
+      // });
       
       m_intake.setDefaultCommand(new RunCommand(()->{
         //if (m_manipulatorJoystick.getYButton()) {
@@ -186,32 +190,56 @@ public class RobotContainer {
           double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
           boolean ready = m_shooter.atSpeed();
           //m_intake.powerConveyor(ready?1:0);
-          m_intake.updateIntake();
-          m_intake.updateShooter();
           m_intake.powerConveyor(ready?1:speed-aspeed);
         
       },m_intake));
     }
     if (ShooterConstants.kHasShooter) {
       m_shooter.setDefaultCommand(new RunCommand(()->{
+        if (m_manipulatorJoystick.getBButton()) {
+          m_shooter.ZeroTurret();
+        }
+        else if (m_manipulatorJoystick.getAButton()) {
+          m_shooter.AutoAimAndShoot();
+        }
+        else {
+          double turn = m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
+          m_shooter.powerTurret(turn);
+          m_shooter.disableLimelight();
+        }
+
         double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
         if (speed < -0.7) {
-
           m_shooter.powerShooter(speed);
         }else {
-          
-        m_shooter.powerShooter(speed>0.5);
+          m_shooter.powerShooter(speed>0.5);
         }
-        // boolean down = m_manipulatorJoystick.getAButtonPressed();
-        // boolean up = m_manipulatorJoystick.getStartButtonPressed();
-        // m_shooter.setSpeed(up?0:down?1:0.5);
-
+        boolean down = m_manipulatorJoystick.getBackButton();
+        boolean up = m_manipulatorJoystick.getStartButton();
+        if (down) {
+          m_shooter.hoodPosition(99);
+        }
+        else if (up) {
+          m_shooter.hoodPosition(-99);
+        }
+        else {
+          m_shooter.stopHood();
+        }
         int pov = m_manipulatorJoystick.getPOV();
-        // System.out.println("POV: "+pov);
-        // if (pov == 0) {
-
-        // }
-        // else if (pov == )
+        switch(pov) {
+          case 0:
+            m_shooter.setZoomPipeline(2);
+            break;
+          case 90:
+            m_shooter.setZoomPipeline(3);
+            break;
+          case 180:
+          break;
+          case 270:
+            m_shooter.setZoomPipeline(1);
+            break;
+        }
+        m_shooter.toggleSide(pov == 180);
       },m_shooter));
     }
     if (LEDConstants.kHasLEDs) {
@@ -221,6 +249,9 @@ public class RobotContainer {
       new JoystickButton(m_driverJoystick, Button.kB.value).whenPressed(()->{
         m_leds.burstInput.clearDisturbances();
       });
+      if (IntakeConstants.kHasIntake) {
+        m_leds.ballCapacity.setUpdator(()->1.0*m_intake.getBallsInRobot()/5.0);
+      }
       /*int endGame = 15;
       int totalAuto = 10;
       int totalTeleop = 30;
@@ -236,21 +267,6 @@ public class RobotContainer {
         m_leds.bar.filledColor = auto?ColorShim.kYellow:time < endGame?time%0.5>0.25?ColorShim.kRed:ColorShim.kBlack:ColorShim.kGreen; 
         return auto?(time / totalAuto):(time / totalTeleop);//-m_driverJoystick.getY(GenericHID.Hand.kLeft);
       });*/
-    }
-    if (ShooterConstants.kHasShooter && DriveConstants.kHasDriveTrain) {
-      //Override the driver's controls when the manipulator wants to turn the chassis while turning the turret
-      new JoystickButton(m_manipulatorJoystick, Button.kStickLeft.value).whileHeld(()->{
-        double turn = 10*m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
-        m_driveTrain.tankDriveVolts(turn, -turn);
-      }, m_driveTrain, m_shooter);
-  
-      //Add A button - aims turret
-      new JoystickButton(m_manipulatorJoystick, Button.kA.value).whileHeld(()->{
-        double chassisTurn = 10 * m_shooter.AutoAimAndShoot();
-        m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
-      },m_shooter, m_driveTrain).whenReleased(()->{
-        m_shooter.enableLimelight(false);
-      });
     }
     if (ClimberConstants.kHasClimber) {
       m_climber.setDefaultCommand(new RunCommand(()->{
@@ -273,10 +289,34 @@ public class RobotContainer {
     //return MultiRamseteCommands("CircleRight");
     //return side();
     //return basicAuto();
-    //We have 
-    return RapidShoot(3);
+    // return new LoadNextBall(m_intake);
+    //return MultiRamseteCommands("straight").andThen(new WaitCommand(3)).andThen(BackwardsRamseteCommand("straight"));
+    return new InstantCommand(()->m_intake.setBallsInRobot(0)).andThen(StealAuto()).andThen(RapidShoot(-1));
+    //return AutoIntake(m_intake);
+    //return RapidShoot(3);
     //return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
     //return MultiRamseteCommands("DirectTrenchAuto","DirectTrenchPickup","one","three","superAuto");
+  }
+  Command StealAuto() throws IOException {
+    return MaintainIntake(RamseteCommand("straight").andThen(BackwardsRamseteCommand("backup")));
+  }
+  
+  Command MaintainIntake(Command cmd) {
+    return new InstantCommand(()->m_intake.setFlipper(true)).andThen(cmd.deadlineWith(
+      new LoadNextBall(m_intake), new InstantCommand(()->m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7))
+    )).andThen(new InstantCommand(()->{
+      m_intake.setFlipper(false);
+      m_intake.powerIntake(0);
+    }));
+  }
+  ParallelCommandGroup xAutoIntake(Intake intake) {
+    return new ParallelCommandGroup(new LoadNextBall(intake), new RunCommand(()->{
+      intake.powerIntake(0.7);
+      intake.setFlipper(true);
+    }).andThen(()->{
+      intake.powerIntake(0);
+      intake.setFlipper(false);
+    }));
   }
   private Command side() throws IOException {
     SequentialCommandGroup c = new SequentialCommandGroup();
@@ -312,16 +352,15 @@ public class RobotContainer {
         m_intake.setBallsInRobot(setBalls);
       }
       m_shooter.powerShooter(true);
-      m_intake.powerConveyor(m_intake.ballInShooter() || m_shooter.atSpeed()?1:0);
+      m_intake.powerConveyor(!m_intake.ballInShooter() || m_shooter.atSpeed()?1:0);
       m_intake.powerIntake(0);
       double chassisTurn = 0* m_shooter.AutoAimAndShoot();
       m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
     }, m_driveTrain, m_shooter, m_intake)
     .withInterrupt(()->{
-      m_intake.updateShooter();
-      return m_intake.getBallsInRobot() <= 0;
+      return m_intake.getBallsInRobot() <= 0 || m_intake.ballInIntake();
     }).withTimeout(7)
-    .andThen(()->m_shooter.enableLimelight(false));
+    .andThen(()->{m_shooter.enableLimelight(false); m_shooter.powerShooter(false); });
   }
   SequentialCommandGroup MultiRamseteCommands (Map<String,Command> map) {
     SequentialCommandGroup c = new SequentialCommandGroup();
@@ -399,7 +438,7 @@ public class RobotContainer {
   private SequentialCommandGroup BackwardsRamseteCommand(String file) throws IOException {
     Trajectory jsonTrajectory = TrajectoryUtil.fromPathweaverJson(Paths.get(
         "/home/lvuser/deploy/output/"+file+".wpilib.json"));
-    System.out.println("EasyRamseteCommand loaded \'"+file+"\' successfully.");
+    System.out.println("BackwardsRamseteCommand loaded \'"+file+"\' successfully.");
     return new SequentialCommandGroup(
       new InstantCommand(()->{
         m_driveTrain.setDirection(true);
@@ -416,7 +455,8 @@ public class RobotContainer {
         m_driveTrain::getWheelSpeeds,
         new PIDController(DriveConstants.kPDriveVel, 0, 0),
         new PIDController(DriveConstants.kPDriveVel, 0, 0),
-        m_driveTrain::tankDriveVolts,
+        (l,r)->m_driveTrain.tankDriveVolts(-l,-r),
+        //m_driveTrain::tankDriveVolts,
         m_driveTrain
     ),
     new InstantCommand(()->{

@@ -48,7 +48,8 @@ public class MultiplexedColorSensor {
    *                port)</br>
    */
   public MultiplexedColorSensor(I2C.Port i2cPort, int port) {
-    if (multiplexer == null) {
+    if (true || multiplexer == null) {
+      System.out.println("Creating an I2C for "+port);
       multiplexer = new I2C(i2cPort, kMultiplexerAddress);
     }
     this.port = port;

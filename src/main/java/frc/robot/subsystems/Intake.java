@@ -16,8 +16,8 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.MultiplexedColorSensor;
 import frc.robot.Constants.IntakeConstants;
 
@@ -78,9 +78,10 @@ public class Intake extends SubsystemBase {
       }
       else {
 
+        shooterColorSensor = new MultiplexedColorSensor(I2C.Port.kOnboard, 7);
         intakeColorSensor = new MultiplexedColorSensor(I2C.Port.kOnboard, 4);
-        shooterColorSensor = new MultiplexedColorSensor(I2C.Port.kOnboard, 2);
         if (IntakeConstants.kDebug) {
+          System.out.println("Color");
           Shuffleboard.getTab("Intake").addNumber("C1 Pos", conveyorMotor1Encoder::getPosition);
           Shuffleboard.getTab("Intake").addNumber("C2 Pos", conveyorMotor2Encoder::getPosition);
           Shuffleboard.getTab("Intake").addNumber("Flipper Pos", intakeFlipEncoder::getPosition);
@@ -97,7 +98,18 @@ public class Intake extends SubsystemBase {
           Shuffleboard.getTab("Intake").addNumber("Color2 IR", shooterColorSensor::getIR);
           Shuffleboard.getTab("Intake").addBoolean("Color2 SHOOTER", this::ballInShooter);
           Shuffleboard.getTab("Intake").addNumber("Balls in Intake!", this::getBallsInRobot);
+          
         }
+        Shuffleboard.getTab("Intake").addNumber("Flipper Pos", intakeFlipEncoder::getPosition);
+        Shuffleboard.getTab("Intake").addNumber("Color4 Red", intakeColorSensor::getRed);
+        Shuffleboard.getTab("Intake").addNumber("Color4 Green", intakeColorSensor::getGreen);
+        Shuffleboard.getTab("Intake").addNumber("shooter Green", shooterColorSensor::getGreen);
+        Shuffleboard.getTab("Intake").addNumber("Color4 Blue", intakeColorSensor::getBlue);
+        Shuffleboard.getTab("Intake").addNumber("Color4 Proximity", intakeColorSensor::getProximity);
+        Shuffleboard.getTab("Intake").addNumber("Color4 IR", intakeColorSensor::getIR);
+        Shuffleboard.getTab("Intake").addBoolean("Color1 SHOOTER", this::ballInShooter);
+        Shuffleboard.getTab("Intake").addBoolean("Color4 INTAKE", this::ballInIntake);
+        Shuffleboard.getTab("Intake").addNumber("Color0 the Balls in a roboto", this::getBallsInRobot);
       }
     }
   }
@@ -118,25 +130,9 @@ public class Intake extends SubsystemBase {
   public void resetFlipper(double newPosition){
     intakeFlipEncoder.setPosition(newPosition);
   }
-  public void powerFlipper(double speed){
-    System.out.println("PFR: "+speed);
-    intakeFlipMotor.set(speed);
-  }
 
   public double getConveyorPosition() {
     return conveyorMotor1Encoder.getPosition();
-  }
-
-  public void reading() {
-    if (IntakeConstants.kHasIntake) {
-      int d6 = -1;//color6.getProximity();
-      int d5 = -1;//color5.getProximity();
-      int d4 = intakeColorSensor.getProximity();
-      int r = intakeColorSensor.getRed();
-      int g = intakeColorSensor.getGreen();
-      int b = intakeColorSensor.getBlue();
-      System.out.println(String.format("Color: (%d, %d, %d), Dist=%d", r,g,b,d4));
-    }
   }
 
   public void powerIntake(double speed) {
@@ -198,6 +194,7 @@ public class Intake extends SubsystemBase {
 
     return in;
   }
+
   public boolean ballInShooter() {
     boolean r = shooterColorSensor.getRed() > IntakeConstants.kShooterColorThesholdR;
     boolean g = shooterColorSensor.getGreen() > IntakeConstants.kShooterColorThesholdG;
@@ -210,5 +207,9 @@ public class Intake extends SubsystemBase {
   @Override
   public void periodic() {
     //reading();
+    if (IntakeConstants.kHasIntake) {
+      updateIntake();
+      updateShooter();
+    }
   }
 }

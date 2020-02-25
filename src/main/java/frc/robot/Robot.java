@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.RobotType;
@@ -47,11 +48,15 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    timer = new Timer();
+    timer.reset();
+    timer.start();
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our
     // autonomous chooser on the dashboard.
     //CameraServer.getInstance().startAutomaticCapture();
     Constants.GenerateConstants(RobotType.PracticeBot);
+    //Constants.GenerateConstants(RobotType.TestBoard);
     m_robotContainer = new RobotContainer();
 
     //Add the USB Camera
@@ -65,7 +70,7 @@ public class Robot extends TimedRobot {
       e.printStackTrace();
     }
   }
-
+  Timer timer;
   /**
    * This function is called every robot packet, no matter the mode. Use this for
    * items like diagnostics that you want ran during disabled, autonomous,
@@ -85,6 +90,7 @@ public class Robot extends TimedRobot {
     // robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    //System.out.println("Time: "+timer.get());
   }
 
   /**
@@ -104,8 +110,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-
-    // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }

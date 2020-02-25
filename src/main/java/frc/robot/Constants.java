@@ -50,13 +50,14 @@ public abstract class Constants {
                 ClimberConstants.kHasClimber = true;
                 IntakeConstants.kHasIntake = true;
                 ShooterConstants.kHasShooter = true;
-                LEDConstants.kHasLEDs = false;
+                ShooterConstants.kHasTurret = true;
+                LEDConstants.kHasLEDs = true;
 
                 DriveConstants.kDebug = false;
                 ControlPanelConstants.kDebug = false;
                 ClimberConstants.kDebug = false;
-                IntakeConstants.kDebug = true;
-                ShooterConstants.kDebug = true;
+                IntakeConstants.kDebug = false;
+                ShooterConstants.kDebug = false;
                 LEDConstants.kDebug = false;
 
                 //CAN WIRING:
@@ -117,8 +118,8 @@ public abstract class Constants {
                 IntakeConstants.kIntakeFlipInEncoder = 0.0;
                 IntakeConstants.kIntakeFlipOutEncoder = -50.0;
                 
-                IntakeConstants.kIntakeColorThesholdR = 1200;
-                IntakeConstants.kIntakeColorThesholdG = 2200;
+                IntakeConstants.kIntakeColorThesholdR = 700; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
+                IntakeConstants.kIntakeColorThesholdG = 1200; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
                 IntakeConstants.kIntakeColorThesholdB = 0;
                 IntakeConstants.kIntakeColorThesholdIR = 0;
                 IntakeConstants.kIntakeColorThesholdProximity = 350;
@@ -140,8 +141,10 @@ public abstract class Constants {
                 ShooterConstants.kShooterMinOutput = -1;
                 ShooterConstants.kMaxRPM = 5700;
 
-                ShooterConstants.kMaxTurretAngle = 90;
-                ShooterConstants.kMinTurretAngle = -90;
+                ShooterConstants.kMaxTurretAngle = 135;//135
+                ShooterConstants.kMinTurretAngle = -135;//-135
+
+                LEDConstants.kLEDPWMPort = 9;
             } break;
             case KOPChassis: {
                 RobotName = "The KOP Chassis Robot";
@@ -230,6 +233,7 @@ public abstract class Constants {
                 ControlPanelConstants.kWheelRotatorMotorPort = 6;
                 ShooterConstants.kHoodAngleServo1Port = 9;
                 ShooterConstants.kTurretMotorPort = 11;
+                LEDConstants.kLEDPWMPort = 9;
 
             } break;
         }
@@ -341,9 +345,9 @@ public abstract class Constants {
         public static double kP = 0.02;
         public static double kFF = 0.075;
         public static double kChassisMultiplier = 2.0;
-        public static double kAimingThreshold = 1.0;
-        public static double kMaxTurretAngle = 90.0;
-        public static double kMinTurretAngle = -90.0;
+        public static double kAimingThreshold = 0.1;
+        public static double kMaxTurretAngle = 60.0;
+        public static double kMinTurretAngle = -60.0;
 
         public static double kShooterP = 6e-5; 
         public static double kShooterI = 0;
@@ -353,6 +357,14 @@ public abstract class Constants {
         public static double kShooterMaxOutput = 1; 
         public static double kShooterMinOutput = -1;
         public static double kMaxRPM = 5700;
+
+        public static double kTurretP = 0.03;
+        public static double kTurretI = 0;
+        public static double kTurretD = 0;
+        public static double kTurretIz = 0; 
+        public static double kTurretFF = 0.000015; 
+        public static double kTurretMaxOutput = 1; 
+        public static double kTurretMinOutput = -1;
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
@@ -396,7 +408,7 @@ public abstract class Constants {
         public static boolean kDebug = false;
         
         public static int kLEDCount = 72;//normally 72
-        public static int kLEDPWMPort = 9;
+        public static int kLEDPWMPort = -1;
 
         public static Color[] kRainbowSequence = {
             ColorShim.kRed,

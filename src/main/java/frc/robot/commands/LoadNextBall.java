@@ -50,7 +50,6 @@ public class LoadNextBall extends CommandBase {
         power = 0;
       }
       if (currentBall) {
-        intake.addBallsInRobot(1);
         oldPosition = newPos;
       }
     }
@@ -63,10 +62,10 @@ public class LoadNextBall extends CommandBase {
       }
     }
     else {
-      if (intake.updateIntake()) {
+      if (currentBall && !hadBall) {
         oldPosition = newPos;
       }
-      if (currentBall || ((status!=0) && (oldPosition + 5.0) > newPos)) {
+      if (currentBall || ((status!=0) && (oldPosition + 15.0) > newPos)) {
         power = 1;
       }
       else {

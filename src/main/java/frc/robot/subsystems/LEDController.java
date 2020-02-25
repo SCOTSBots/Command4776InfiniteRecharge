@@ -29,6 +29,7 @@ public class LEDController extends SubsystemBase {
   public Section[] sections;
   public Burst burstInput;
   public ProgressBar bar;
+  public ProgressBar ballCapacity;
   AddressableLED m_led;
   AddressableLEDBuffer m_ledBuffer;
 
@@ -43,12 +44,14 @@ public class LEDController extends SubsystemBase {
       m_led.start();
       burstInput = new Burst(0, m_ledBuffer.getLength(), 3, ColorShim.kBlack, ColorShim.kRed);
       bar = new ProgressBar(0, m_ledBuffer.getLength(), ColorShim.kBlack, ColorShim.kOrange, 0);
+      ballCapacity = new ProgressBar(0, m_ledBuffer.getLength(), ColorShim.kRed, ColorShim.kWhite, 0);
       Section chase = new Chase(0, m_ledBuffer.getLength(), 3, LEDConstants.kRandomSequence);
       Section ambient = new Ambience(0, m_ledBuffer.getLength(), Color.kBlack, LEDConstants.kRandomSequence);
       sections = new Section[]{
-        new FMSTimer(0, m_ledBuffer.getLength(), 15, 10, 30, 100, ambient)
+        //new FMSTimer(0, m_ledBuffer.getLength(), 15, 10, 30, 100, ambient)
         //new FMS(0, m_ledBuffer.getLength()),
-        //new Chase(m_ledBuffer.getLength()/2, m_ledBuffer.getLength(), 3, LEDConstants.kMainlyGreen)
+        //new Chase(0, m_ledBuffer.getLength(), 3, LEDConstants.kMainlyGreen)
+        ballCapacity
       };
       //new ProgressBar(0, 2, Color.kAliceBlue, Color.kBlack, 0);
       //double time = DriverStation.getInstance().getMatchTime();
