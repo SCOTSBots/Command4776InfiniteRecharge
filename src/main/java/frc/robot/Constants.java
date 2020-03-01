@@ -38,10 +38,7 @@ public abstract class Constants {
     public static RobotType GenerateConstants(RobotType robot) {
         switch (robot) {
             case CompBot: {
-                RobotName = "The Competition Robot";
-            } break;
-            case PracticeBot: {
-                RobotName = "The Practice Robot";
+                RobotName = "The Competiton Robot";
 
                 DriveConstants.kHasDriveTrain = true;
                 DriveConstants.kHasGyro = true;
@@ -61,31 +58,30 @@ public abstract class Constants {
                 LEDConstants.kDebug = false;
 
                 //CAN WIRING:
-                ShooterConstants.kShooterMotor1Port = 18;
-                ShooterConstants.kShooterMotor2Port = 6;
-                ShooterConstants.kHoodAngleServo1Port = 1; //PWM, not CAN
-                ShooterConstants.kHoodAngleServo2Port = 2; //PWM, not CAN
-                ShooterConstants.kTurretMotorPort = 11;
-                DriveConstants.kLeftMotor1Port = 12;
-                DriveConstants.kLeftMotor2Port = 15;
-                DriveConstants.kRightMotor1Port = 13;
-                DriveConstants.kRightMotor2Port = 14;
-                IntakeConstants.kIntakeFlipMotorPort = 10;
-                IntakeConstants.kIntakeMotorPort = 4;
-                IntakeConstants.kConveyorMotor1Port = 5;
-                IntakeConstants.kConveyorMotor2Port = 8;
-                ClimberConstants.kClimberMotor1Port = 16;
-                ClimberConstants.kClimberMotor2Port = 17;
+                ShooterConstants.kShooterMotor1Port = 33;
+                ShooterConstants.kShooterMotor2Port = 32;
+                ShooterConstants.kHoodAngleServoPort = 1; //PWM, not CAN
+                ShooterConstants.kTurretMotorPort = 21;
+                DriveConstants.kLeftMotor1Port = 37;
+                DriveConstants.kLeftMotor2Port = 38;
+                DriveConstants.kRightMotor1Port = 34;
+                DriveConstants.kRightMotor2Port = 30;
+                IntakeConstants.kIntakeFlipMotorPort = 22;
+                IntakeConstants.kIntakeMotorPort = 35;
+                IntakeConstants.kConveyorMotor1Port = 19;
+                IntakeConstants.kConveyorMotor2Port = 7;
+                ClimberConstants.kClimberMotor1Port = 39;
+                ClimberConstants.kClimberMotor2Port = 36;
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
-                ControlPanelConstants.kControlPanelRotatorMotorPort = 3;
-                ControlPanelConstants.kWheelRotatorMotorPort = -1;
+                ControlPanelConstants.kWheelRotatorMotorPort = 31;
+                ControlPanelConstants.kMechanismRotatorServoPort = 31; //PWM, not CAN
 
                 //DRIVE CONSTANTS
-                DriveConstants.ksVolts = 0.176;
+                DriveConstants.ksVolts = 0.195;
                 DriveConstants.kvVoltSecondsPerMeter = 2.78;
-                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.409;
-                DriveConstants.kPDriveVel = 2.58;
-                DriveConstants.kTrackwidthMeters = 1.5;//TODO: put back;
+                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.381;
+                DriveConstants.kPDriveVel = 2.57;
+                DriveConstants.kTrackwidthMeters = 3.0;//TODO: put back;
                 DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
                     DriveConstants.kTrackwidthMeters);
                 DriveConstants.kFeedforward = new SimpleMotorFeedforward(
@@ -116,10 +112,10 @@ public abstract class Constants {
                 IntakeConstants.kIntakeFlipMaxOutput = 1;
                 IntakeConstants.kIntakeFlipMinOutput = -1;
                 IntakeConstants.kIntakeFlipInEncoder = 0.0;
-                IntakeConstants.kIntakeFlipOutEncoder = -50.0;
+                IntakeConstants.kIntakeFlipOutEncoder = -55.0;
                 
-                IntakeConstants.kIntakeColorThesholdR = 700; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
-                IntakeConstants.kIntakeColorThesholdG = 1200; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
+                IntakeConstants.kIntakeColorThesholdR = 930; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
+                IntakeConstants.kIntakeColorThesholdG = 1600; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
                 IntakeConstants.kIntakeColorThesholdB = 0;
                 IntakeConstants.kIntakeColorThesholdIR = 0;
                 IntakeConstants.kIntakeColorThesholdProximity = 350;
@@ -141,8 +137,114 @@ public abstract class Constants {
                 ShooterConstants.kShooterMinOutput = -1;
                 ShooterConstants.kMaxRPM = 5700;
 
-                ShooterConstants.kMaxTurretAngle = 135;//135
-                ShooterConstants.kMinTurretAngle = -135;//-135
+                ShooterConstants.kMaxTurretAngle = 130;//135
+                ShooterConstants.kMinTurretAngle = -130;//-135
+
+                LEDConstants.kLEDPWMPort = 9;
+            } break;
+            case PracticeBot: {
+                RobotName = "The Practice Robot";
+
+                DriveConstants.kHasDriveTrain = true;
+                DriveConstants.kHasGyro = true;
+                DriveConstants.kHasPixy = false;
+                ControlPanelConstants.kHasControlPanel = false;
+                ClimberConstants.kHasClimber = true;
+                IntakeConstants.kHasIntake = true;
+                ShooterConstants.kHasShooter = true;
+                ShooterConstants.kHasTurret = true;
+                LEDConstants.kHasLEDs = true;
+
+                DriveConstants.kDebug = false;
+                ControlPanelConstants.kDebug = false;
+                ClimberConstants.kDebug = false;
+                IntakeConstants.kDebug = true;
+                ShooterConstants.kDebug = false;
+                LEDConstants.kDebug = false;
+
+                //CAN WIRING:
+                ShooterConstants.kShooterMotor1Port = 18;
+                ShooterConstants.kShooterMotor2Port = 6;
+                // ShooterConstants.kHoodAngleServo1Port = 1; //PWM, not CAN
+                // ShooterConstants.kHoodAngleServo2Port = 2; //PWM, not CAN
+                ShooterConstants.kTurretMotorPort = 11;
+                DriveConstants.kLeftMotor1Port = 12;
+                DriveConstants.kLeftMotor2Port = 15;
+                DriveConstants.kRightMotor1Port = 13;
+                DriveConstants.kRightMotor2Port = 14;
+                IntakeConstants.kIntakeFlipMotorPort = 10;
+                IntakeConstants.kIntakeMotorPort = 4;
+                IntakeConstants.kConveyorMotor1Port = 5;
+                IntakeConstants.kConveyorMotor2Port = 8;
+                ClimberConstants.kClimberMotor1Port = 16;
+                ClimberConstants.kClimberMotor2Port = 17;
+                ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
+                // ControlPanelConstants.kControlPanelRotatorMotorPort = 3;
+                // ControlPanelConstants.kWheelRotatorMotorPort = -1;
+
+                //DRIVE CONSTANTS
+                DriveConstants.ksVolts = 0.195;
+                DriveConstants.kvVoltSecondsPerMeter = 2.78;
+                DriveConstants.kaVoltSecondsSquaredPerMeter = 0.381;
+                DriveConstants.kPDriveVel = 2.57;
+                DriveConstants.kTrackwidthMeters = 3.0;//TODO: put back;
+                DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
+                    DriveConstants.kTrackwidthMeters);
+                DriveConstants.kFeedforward = new SimpleMotorFeedforward(
+                    DriveConstants.ksVolts,
+                    DriveConstants.kvVoltSecondsPerMeter,
+                    DriveConstants.kaVoltSecondsSquaredPerMeter);
+                DriveConstants.kLeftPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+                DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+                DriveConstants.kMaxSpeedMetersPerSecond = 1.0;
+                DriveConstants.kMaxAccelerationMetersPerSecondSquared = 1.0;
+                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 0.5 * Math.PI;//TODO: Put back/tune
+                //DriveConstants.kRamseteB = 2;
+                //DriveConstants.kRamseteZeta = 0.7;
+                DriveConstants.kMaxRPM = 5700;
+                DriveConstants.kWheelDiameter = 0.148;
+                DriveConstants.kMotorGearsToWheelGears = 10.7;
+                DriveConstants.kRevolutionsToMeters = Math.PI * DriveConstants.kWheelDiameter / DriveConstants.kMotorGearsToWheelGears;
+                DriveConstants.kRPMtoMetersPerSecond = 
+                    Math.PI * DriveConstants.kWheelDiameter / (60 * DriveConstants.kMotorGearsToWheelGears);
+                DriveConstants.kGyroReversed = true;
+
+                //INTAKE CONSTANTS
+                IntakeConstants.kIntakeFlipP = 0.04;
+                IntakeConstants.kIntakeFlipI = 1e-5;
+                IntakeConstants.kIntakeFlipD = 0.2;
+                IntakeConstants.kIntakeFlipIz = 0;
+                IntakeConstants.kIntakeFlipFF = 0;
+                IntakeConstants.kIntakeFlipMaxOutput = 1;
+                IntakeConstants.kIntakeFlipMinOutput = -1;
+                IntakeConstants.kIntakeFlipInEncoder = 0.0;
+                IntakeConstants.kIntakeFlipOutEncoder = -55.0;
+                
+                IntakeConstants.kIntakeColorThesholdR = 930; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
+                IntakeConstants.kIntakeColorThesholdG = 1600; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
+                IntakeConstants.kIntakeColorThesholdB = 0;
+                IntakeConstants.kIntakeColorThesholdIR = 0;
+                IntakeConstants.kIntakeColorThesholdProximity = 350;
+
+                IntakeConstants.kShooterColorThesholdIR = 0;
+                IntakeConstants.kShooterColorThesholdG = 0;
+                IntakeConstants.kShooterColorThesholdB = 0;
+                IntakeConstants.kShooterColorThesholdIR = 0;
+                IntakeConstants.kShooterColorThesholdProximity = 200;
+
+                //SHOOTER CONSTANTS
+                
+                ShooterConstants.kShooterP = 6e-2; 
+                ShooterConstants.kShooterI = 0;
+                ShooterConstants.kShooterD = 0; 
+                ShooterConstants.kShooterIz = 0; 
+                ShooterConstants.kShooterFF = 0.000015; 
+                ShooterConstants.kShooterMaxOutput = 1; 
+                ShooterConstants.kShooterMinOutput = -1;
+                ShooterConstants.kMaxRPM = 5700;
+
+                ShooterConstants.kMaxTurretAngle = 130;//135
+                ShooterConstants.kMinTurretAngle = -130;//-135
 
                 LEDConstants.kLEDPWMPort = 9;
             } break;
@@ -230,9 +332,7 @@ public abstract class Constants {
                 DriveConstants.kHasGyro = false;
                 DriveConstants.kHasPixy = false;
                 ControlPanelConstants.kHasControlPanel = false;
-                ControlPanelConstants.kWheelRotatorMotorPort = 6;
-                ShooterConstants.kHoodAngleServo1Port = 9;
-                ShooterConstants.kTurretMotorPort = 11;
+                
                 LEDConstants.kLEDPWMPort = 9;
 
             } break;
@@ -314,7 +414,7 @@ public abstract class Constants {
         //What I2C port to plug the REV Color Sensor V3 into
         public static I2C.Port kColorSensorPort = I2C.Port.kOnboard;
         public static int kWheelRotatorMotorPort = 7;
-        public static int kControlPanelRotatorMotorPort = 7;
+        public static int kMechanismRotatorServoPort = -1; //PWM
 
         public static double kSliceWidthCounts = 32;
         public static double kRedColorDistanceThreshold = 0.17;
@@ -339,8 +439,7 @@ public abstract class Constants {
         public static int kShooterMotor2Port = 7;//Shooter 2 = right
         public static int kTurretMotorPort = 0;
         public static int kAngleScrewServoPort = 0;
-        public static int kHoodAngleServo1Port = 9;
-        public static int kHoodAngleServo2Port = 9;
+        public static int kHoodAngleServoPort = -1;
 
         public static double kP = 0.02;
         public static double kFF = 0.075;

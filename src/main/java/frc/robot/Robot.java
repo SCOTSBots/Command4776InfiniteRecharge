@@ -22,20 +22,6 @@ import frc.robot.Constants.RobotType;
  * documentation. If you change the name of this class or the package after
  * creating this project, you must also update the build.gradle file in the
  * project.
- * 
- * TODO: to do steps:
- * shooter (limelight+wheel)
-    control panel+color sensor
-    drivetrain
-    intake+CONVEYER+pixycam/machine learning + color sensor
-    climber
-
-    pr chassis working by 13
-    pr manipulating machines working by 15
-    driver tryout=feb 14
-
-
-    plug color sensor into spark max
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
@@ -110,8 +96,14 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+    try {
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+      if (m_autonomousCommand != null) {
+        m_autonomousCommand.schedule();
+      }
+    } catch (IOException e) {
+      System.out.println("Couldn't get autonomous command!");
+      e.printStackTrace();
     }
   }
 

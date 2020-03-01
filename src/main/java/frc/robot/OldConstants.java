@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.util.Color;
  * It is advised to statically import this class (or one of its inner classes)
  * wherever the constants are needed, to reduce verbosity.
  */
+@Deprecated
 public final class OldConstants {
     public final static class DriveConstants {
         // These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!

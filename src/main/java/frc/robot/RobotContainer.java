@@ -13,7 +13,6 @@ import java.util.Map;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
@@ -24,9 +23,9 @@ import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
-import edu.wpi.first.wpilibj.util.ColorShim;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.ClimberConstants;
 import frc.robot.Constants.ControlPanelConstants;
@@ -47,19 +46,16 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDController;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.*;
-import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import static java.util.Map.entry;
 
 /**
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -81,11 +77,14 @@ public class RobotContainer {
   private final XboxController m_manipulatorJoystick = new XboxController(OIConstants.kManipulatorControllerPort);
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+
+  private final SendableChooser<CommandsToChoose> m_chooser = new SendableChooser<>();
+  private final Command m_selectCommand;
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    System.out.println("Hello aand Welcome to Infinite Recharge! Starting up robot \""+Constants.RobotName+"\"!");
+    System.out.println("Hello and Welcome to Infinite Recharge! Starting up robot \""+Constants.RobotName+"\"!");
     // Configure the button bindings
     configureButtonBindings();
 
@@ -109,6 +108,29 @@ public class RobotContainer {
     CameraModes.setName("Camera Mode");
     commands.add(LEDs);
     commands.add(CameraModes);
+
+    //Create Autonomous Commands
+    try {
+      CreateAutoCommandsForAutoSelector();
+    } catch (IOException e) {
+      System.out.println("Auto commands could not be created!");
+      e.printStackTrace();
+    }
+    m_selectCommand = new SelectCommand(Map.ofEntries(
+      entry(CommandsToChoose.Default, DefaultAuto),
+      entry(CommandsToChoose.DirectTrench, DirectTrench),
+      entry(CommandsToChoose.Wall, Wall),
+      entry(CommandsToChoose.DirectRndzvs, DirectRndzvs),
+      entry(CommandsToChoose.PickupMissedBalls, PickupMissedBalls),
+      entry(CommandsToChoose.Test, Test)
+      ), this::select);
+    m_chooser.setDefaultOption("Default Auto", CommandsToChoose.Default);
+    m_chooser.addOption("Direct Trench", CommandsToChoose.DirectTrench);
+    m_chooser.addOption("Wall", CommandsToChoose.Wall);
+    m_chooser.addOption("Direct Rendezvous", CommandsToChoose.DirectRndzvs);
+    m_chooser.addOption("Pickup Missed Balls", CommandsToChoose.PickupMissedBalls);
+
+    Shuffleboard.getTab("Auto").add(m_chooser);
   }
 
   /**
@@ -205,7 +227,7 @@ public class RobotContainer {
         else {
           double turn = m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
           m_shooter.powerTurret(turn);
-          m_shooter.disableLimelight();
+          //m_shooter.disableLimelight();
         }
 
         double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
@@ -277,7 +299,6 @@ public class RobotContainer {
     }
   }
 
-
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -291,16 +312,54 @@ public class RobotContainer {
     //return basicAuto();
     // return new LoadNextBall(m_intake);
     //return MultiRamseteCommands("straight").andThen(new WaitCommand(3)).andThen(BackwardsRamseteCommand("straight"));
-    return new InstantCommand(()->m_intake.setBallsInRobot(0)).andThen(StealAuto()).andThen(RapidShoot(-1));
+    //return ResetBalls().andThen(StealAuto(), RapidShoot(-1));
+    //return DirectTrench;
+    return m_selectCommand;
+    //return SafetyShoot(3,false).andThen(MaintainIntake(RamseteCommand("ForwardTrenchPickup")));
+    //return new AutoSweepTurret(m_shooter, 0, 100);
     //return AutoIntake(m_intake);
     //return RapidShoot(3);
     //return MultiRamseteCommands(Map.of("DirectTrenchAuto", new WaitCommand(3), "DirectTrenchPickup",new WaitCommand(3)));
     //return MultiRamseteCommands("DirectTrenchAuto","DirectTrenchPickup","one","three","superAuto");
   }
+  private void CreateAutoCommandsForAutoSelector() throws IOException {
+    DefaultAuto = RamseteCommand("straight");
+    //These are named exactly as they are in "Autonomous Strategy" on page 2 in the Google Drive.
+    DirectTrench = CalibrateTurretPosition(-107).andThen(
+      //SafetyShoot(3, false),
+      
+      ((/*SudoTurret(0,MaintainIntake(*/RamseteCommand("DirectTrenchPickupShoot3").deadlineWith(setZoom(2)))));
+      //new AutoSweepTurret(m_shooter, 0, 90),
+      //RapidShoot(1, true));
+    Test = SafetyShoot(3,false).andThen(MaintainIntake(RamseteCommand("ForwardTrenchPickup")));
+
+    Wall = new PrintCommand("Wall command ran.");
+    DirectRndzvs = new PrintCommand("Rendezvous command ran.");
+    PickupMissedBalls = new PrintCommand("PickupMissedBalls command ran.");
+  }
+  public Command Test;
+  public Command DefaultAuto;
+  public Command Wall;
+  public Command DirectTrench;
+  public Command DirectRndzvs;
+  public Command PickupMissedBalls;
+  InstantCommand setZoom(int level) {
+    return new InstantCommand(()->m_shooter.setZoomPipeline(level));
+  }
+  InstantCommand ResetBalls() {
+    return new InstantCommand(()->m_intake.setBallsInRobot(0));
+  }
+  InstantCommand CalibrateTurretPosition(double targetPosition) {
+    return new InstantCommand(()->m_shooter.CalibrateTurret(targetPosition));
+  }
   Command StealAuto() throws IOException {
     return MaintainIntake(RamseteCommand("straight").andThen(BackwardsRamseteCommand("backup")));
   }
-  
+  /**
+   * This runs the intake while you are running your command.
+   * @param cmd The command you wanr to run at he same time. Usually a RamseteCommand
+   * @return the output command
+   */
   Command MaintainIntake(Command cmd) {
     return new InstantCommand(()->m_intake.setFlipper(true)).andThen(cmd.deadlineWith(
       new LoadNextBall(m_intake), new InstantCommand(()->m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7))
@@ -309,6 +368,11 @@ public class RobotContainer {
       m_intake.powerIntake(0);
     }));
   }
+  Command SudoTurret(double targetPosition, Command cmd) {
+    return cmd.deadlineWith(new RunCommand(()->m_shooter.TurretToPosition(targetPosition)).
+    withInterrupt(()->{return Math.abs(m_shooter.getTurretPosition()-targetPosition) < 10;}));
+  }
+  @Deprecated
   ParallelCommandGroup xAutoIntake(Intake intake) {
     return new ParallelCommandGroup(new LoadNextBall(intake), new RunCommand(()->{
       intake.powerIntake(0.7);
@@ -326,7 +390,7 @@ public class RobotContainer {
     //   new RunCommand(()->m_shooter.powerShooter(false)));
     //Command shoot = 
     //c.addCommands(RapidShoot(3),b,pickUpBalls,RapidShoot(0));//, pickUpBalls,RapidShoot());
-    c.addCommands(b,RapidShoot(3));
+    c.addCommands(b,RapidShoot(3, false));
     return c;
   }
   private Command basicAuto() throws IOException {
@@ -336,7 +400,7 @@ public class RobotContainer {
       new EasyIntake(m_intake), 
       new RunCommand(()->m_shooter.powerShooter(false)));
     //Command shoot = 
-    c.addCommands(RapidShoot(3),b,pickUpBalls,RapidShoot(0));//, pickUpBalls,RapidShoot());
+    c.addCommands(RapidShoot(3, false),b,pickUpBalls,RapidShoot(-1, false));//, pickUpBalls,RapidShoot());
     return c;
   }
   private RunCommand disableDevices() {
@@ -346,19 +410,64 @@ public class RobotContainer {
       m_shooter.powerShooter(false);
     });
   }
-  private SequentialCommandGroup RapidShoot(int setBalls) {
+
+  
+  private enum CommandsToChoose {
+    Default, DirectTrench, Wall, DirectRndzvs, PickupMissedBalls, Test
+  }
+
+  private CommandsToChoose select() {
+    return m_chooser.getSelected();
+    //return CommandsToChoose.Test;
+  }
+  
+  private SequentialCommandGroup SafetyShoot(int setBalls, boolean aim) {
+    Command main = new RunCommand(()->{
+      if (setBalls >= 0) {
+        m_intake.setBallsInRobot(setBalls);
+      }
+      m_shooter.powerShooter(true);
+
+      boolean shoot = m_shooter.atSpeed();
+      boolean charge = !m_intake.ballInShooter();
+      //if (shoot) System.out.println("Ready to shoot");
+      //if (charge) System.out.println("Charging up");
+      
+      m_intake.powerConveyor(charge || shoot?1:0);
+      m_intake.powerIntake(0);
+
+      double chassisTurn = aim?0*m_shooter.AutoAimAndShoot():0;
+      m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
+    }, m_driveTrain, m_shooter, m_intake)
+    .withInterrupt(()->{
+      return m_shooter.shotAllBalls();
+    }).withTimeout(7)
+    .andThen(()->{m_shooter.enableLimelight(false); m_shooter.powerShooter(false); });
+    return new InstantCommand(()->m_shooter.setBallCount(setBalls)).andThen(main);
+  }
+  private SequentialCommandGroup RapidShoot(int setBalls, boolean aim) {
     return new RunCommand(()->{
       if (setBalls >= 0) {
         m_intake.setBallsInRobot(setBalls);
       }
       m_shooter.powerShooter(true);
-      m_intake.powerConveyor(!m_intake.ballInShooter() || m_shooter.atSpeed()?1:0);
+
+      boolean shoot = m_shooter.atSpeed();
+      boolean charge = !m_intake.ballInShooter();
+      if (shoot) System.out.println("Ready to shoot");
+      if (charge) System.out.println("Charging up");
+      m_intake.powerConveyor(charge || shoot?1:0);
       m_intake.powerIntake(0);
-      double chassisTurn = 0* m_shooter.AutoAimAndShoot();
+
+      double chassisTurn = aim?0*m_shooter.AutoAimAndShoot():0;
       m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
     }, m_driveTrain, m_shooter, m_intake)
     .withInterrupt(()->{
-      return m_intake.getBallsInRobot() <= 0 || m_intake.ballInIntake();
+      boolean a = m_intake.getBallsInRobot() <= 0;
+      boolean b = false && m_intake.ballInIntake();
+      if (a) System.out.println("A!");
+      if (b) System.out.println("B!");
+      return a || b;
     }).withTimeout(7)
     .andThen(()->{m_shooter.enableLimelight(false); m_shooter.powerShooter(false); });
   }
@@ -405,6 +514,13 @@ public class RobotContainer {
         m_driveTrain
     ).andThen(() -> m_driveTrain.tankDriveVolts(0, 0)),jsonTrajectory);
   }
+  /**
+   * This is THE BEST (or BackwardsRamseteCommand) command to use for Ramsete control. As of 2/28/20
+   * @param file The name of the file you are reading.
+   * @return The Command (in type SequentialCommandGroup because why not), 
+   * that resets odometry and stops after
+   * @throws IOException just add a throws IOException in front of your method
+   */
   private SequentialCommandGroup RamseteCommand(String file) throws IOException {
     Trajectory jsonTrajectory = TrajectoryUtil.fromPathweaverJson(Paths.get(
         "/home/lvuser/deploy/output/"+file+".wpilib.json"));

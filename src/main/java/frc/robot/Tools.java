@@ -10,7 +10,6 @@ package frc.robot;
 import java.util.function.Consumer;
 
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.ColorShim;
 import frc.robot.Constants.ControlPanelConstants;
 
 /**

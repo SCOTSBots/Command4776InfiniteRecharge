@@ -24,12 +24,11 @@ import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
-import frc.robot.Constants;
 import frc.robot.ShuffleboardHelper;
-import frc.robot.Tools;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Tools.MathTools;
 import frc.robot.pixy.Pixy2;
@@ -88,19 +87,23 @@ public class DriveTrain extends SubsystemBase {
       m_rightEncoder.setVelocityConversionFactor(DriveConstants.kRPMtoMetersPerSecond);
       resetEncoders();
       m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()));
-    
-      m_leftFrontMotor.setIdleMode(IdleMode.kBrake);
-      m_leftBackMotor.setIdleMode(IdleMode.kBrake);
-      m_rightFrontMotor.setIdleMode(IdleMode.kBrake);
-      m_rightBackMotor.setIdleMode(IdleMode.kBrake);
+      
+      IdleMode mode = IdleMode.kBrake;
+
+      m_leftFrontMotor.setIdleMode(mode);
+      m_leftBackMotor.setIdleMode(mode);
+      m_rightFrontMotor.setIdleMode(mode);
+      m_rightBackMotor.setIdleMode(mode);
 
       if (DriveConstants.kDebug) {
-        ShuffleboardHelper.addSparkMaxLayout("Drive Train Motors", Map.of(
+        ShuffleboardHelper.addSparkMaxLayout("Drive", "Drive Train Motors", Map.of(
           m_leftFrontMotor, "Left Front Motor",
           m_leftBackMotor, "Left Back Motor",
           m_rightFrontMotor, "Right Front Motor",
           m_rightBackMotor, "Right Back Motor"
         ));
+        Shuffleboard.getTab("Drive").addString("Odometry", ()->m_odometry.getPoseMeters().toString());
+        Shuffleboard.getTab("Drive").addNumber("Gyro", this::getHeading);
       }
     }
     else {
@@ -239,7 +242,7 @@ public class DriveTrain extends SubsystemBase {
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
     if (DriveConstants.kHasDriveTrain) {
-      String debug = debug(leftVolts, rightVolts);
+      //String debug = debug(leftVolts, rightVolts);
       //System.out.println(debug);
       m_leftFrontMotor.setVoltage(leftVolts);
       m_rightFrontMotor.setVoltage(-rightVolts);
@@ -292,12 +295,7 @@ public class DriveTrain extends SubsystemBase {
   public double getHeading() {
     if (m_gyro == null)
       return 0;
-    if (backwards) {
-        return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? 1.0 : -1.0);
-    }
-    else {
-        return Math.IEEEremainder(-m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
-    }
+    return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ^ backwards ? -1.0 : 1.0);
   }
 
   /**
@@ -333,7 +331,21 @@ public class DriveTrain extends SubsystemBase {
   private double m_quickStopAlpha = kDefaultQuickStopAlpha;
   private double m_quickStopAccumulator;
   protected double m_deadband = kDefaultDeadband;
+
+  public static final double kLimitChange = 0.07;
+  public static final double kLimitTurn = 0.10;
+  private double oldOutput = 0;
+  private double oldTurn = 0;
+
   public void curvatureDrive(double xSpeed, double zRotation, boolean isQuickTurn, BiConsumer<Double, Double> output) {
+    //Ramp it first
+    double change = Math.max(Math.min(xSpeed - oldOutput, kLimitChange), -kLimitChange);
+    oldOutput += change;
+    xSpeed = oldOutput;
+    // double turn = Math.max(Math.min(zRotation - oldTurn, kLimitTurn), -kLimitTurn);
+    // oldTurn += turn;
+    // zRotation = oldTurn;
+    
     xSpeed = MathUtil.clamp(xSpeed, -1.0, 1.0);
     xSpeed = MathTools.applyDeadband(xSpeed, m_deadband);
     zRotation = MathUtil.clamp(zRotation, -1.0, 1.0);

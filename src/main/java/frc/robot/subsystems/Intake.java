@@ -16,7 +16,6 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.MultiplexedColorSensor;
 import frc.robot.Constants.IntakeConstants;
@@ -99,17 +98,17 @@ public class Intake extends SubsystemBase {
           Shuffleboard.getTab("Intake").addBoolean("Color2 SHOOTER", this::ballInShooter);
           Shuffleboard.getTab("Intake").addNumber("Balls in Intake!", this::getBallsInRobot);
           
+          // Shuffleboard.getTab("Intake").addNumber("Flipper Pos", intakeFlipEncoder::getPosition);
+          // Shuffleboard.getTab("Intake").addNumber("Color4 Red", intakeColorSensor::getRed);
+          // Shuffleboard.getTab("Intake").addNumber("Color4 Green", intakeColorSensor::getGreen);
+          // Shuffleboard.getTab("Intake").addNumber("shooter Green", shooterColorSensor::getGreen);
+          // Shuffleboard.getTab("Intake").addNumber("Color4 Blue", intakeColorSensor::getBlue);
+          // Shuffleboard.getTab("Intake").addNumber("Color4 Proximity", intakeColorSensor::getProximity);
+          // Shuffleboard.getTab("Intake").addNumber("Color4 IR", intakeColorSensor::getIR);
+          // Shuffleboard.getTab("Intake").addBoolean("Color1 SHOOTER", this::ballInShooter);
+          // Shuffleboard.getTab("Intake").addBoolean("Color4 INTAKE", this::ballInIntake);
+          // Shuffleboard.getTab("Intake").addNumber("Color0 the Balls in a roboto", this::getBallsInRobot);
         }
-        Shuffleboard.getTab("Intake").addNumber("Flipper Pos", intakeFlipEncoder::getPosition);
-        Shuffleboard.getTab("Intake").addNumber("Color4 Red", intakeColorSensor::getRed);
-        Shuffleboard.getTab("Intake").addNumber("Color4 Green", intakeColorSensor::getGreen);
-        Shuffleboard.getTab("Intake").addNumber("shooter Green", shooterColorSensor::getGreen);
-        Shuffleboard.getTab("Intake").addNumber("Color4 Blue", intakeColorSensor::getBlue);
-        Shuffleboard.getTab("Intake").addNumber("Color4 Proximity", intakeColorSensor::getProximity);
-        Shuffleboard.getTab("Intake").addNumber("Color4 IR", intakeColorSensor::getIR);
-        Shuffleboard.getTab("Intake").addBoolean("Color1 SHOOTER", this::ballInShooter);
-        Shuffleboard.getTab("Intake").addBoolean("Color4 INTAKE", this::ballInIntake);
-        Shuffleboard.getTab("Intake").addNumber("Color0 the Balls in a roboto", this::getBallsInRobot);
       }
     }
   }

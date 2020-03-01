@@ -14,6 +14,7 @@ import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,7 +34,7 @@ import frc.robot.commands.ControlPanelRotate;
 public class ControlPanelController extends SubsystemBase {
   //Note: reading the color wheel works well, but for sensing balls in the intake, use Blue and Proximity.
   CANSparkMax m_wheelRotatorMotor; //the wheel rotates the control panel
-  CANSparkMax m_controllerRotatorMotor; //Rotates the mechanism to put it on the control panel
+  Servo m_mechanismRotator; //Rotates the mechanism to put it on the control panel
   CANEncoder m_wheelRotatorEncoder;
   ColorSensorV3 m_colorSensor;
   ColorMatch m_colorMatcher;
@@ -48,8 +49,8 @@ public class ControlPanelController extends SubsystemBase {
     if (ControlPanelConstants.kHasControlPanel) {
       m_wheelRotatorMotor = new CANSparkMax(ControlPanelConstants.kWheelRotatorMotorPort, MotorType.kBrushless);
       m_wheelRotatorEncoder = m_wheelRotatorMotor.getEncoder();
-
-      m_controllerRotatorMotor = new CANSparkMax(ControlPanelConstants.kControlPanelRotatorMotorPort, MotorType.kBrushless);
+      
+      m_mechanismRotator = new Servo(ControlPanelConstants.kMechanismRotatorServoPort);
       
       m_colorSensor = new ColorSensorV3(ControlPanelConstants.kColorSensorPort);
       m_colorMatcher = new ColorMatch();
@@ -116,6 +117,9 @@ public class ControlPanelController extends SubsystemBase {
 
   public void setWheelSpeed(double speed) {
     m_wheelRotatorMotor.set(speed);
+  }
+  public void setMechanismAngle(double angle) {
+    m_mechanismRotator.set(angle);
   }
 
   @Override

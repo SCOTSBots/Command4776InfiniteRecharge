@@ -18,12 +18,11 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.ControlledServos;
+import frc.robot.ControlledServo;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Tools.DataTools.Toggle;
@@ -47,7 +46,7 @@ public class Shooter extends SubsystemBase {
   CANPIDController shooterPID2;
   PIDController turretPID;
 
-  ControlledServos hoodAngle;
+  ControlledServo hoodAngle;
 
 
   NetworkTableEntry LEDMode;
@@ -114,7 +113,7 @@ public class Shooter extends SubsystemBase {
         }
       } //End of turret
 
-      hoodAngle = new ControlledServos(ShooterConstants.kHoodAngleServo1Port, ShooterConstants.kHoodAngleServo2Port);
+      hoodAngle = new ControlledServo(ShooterConstants.kHoodAngleServoPort);
 
       //Get the Network Tables for the limelight
       table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -147,16 +146,19 @@ public class Shooter extends SubsystemBase {
       if (ShooterConstants.kDebug) {
         //Shuffleboard.getTab("Shooter").addNumber("Shooter1 Vel", shooterEncoder1::getVelocity);
         //Shuffleboard.getTab("Shooter").addNumber("Shooter2 Vel", shooterEncoder2::getVelocity);
-        ShuffleboardHelper.addSparkMaxLayout("Shooters", Map.of(shooterMotor1,"Shooter1",shooterMotor2,"Shooter2"));
+        ShuffleboardHelper.addSparkMaxLayout("Shooter","Shooter Motors", Map.of(shooterMotor1,"Shooter1",shooterMotor2,"Shooter2"));
         Shuffleboard.getTab("Shooter").addNumber("Limelight Distance", this::getLimelightDistance);
         Shuffleboard.getTab("Shooter").addString("Side Mode", this::printSide);
         Shuffleboard.getTab("Shooter").addBoolean("Far Away", this::isFarAway);
         Shuffleboard.getTab("Shooter").addNumber("TX", ()->tx.getDouble(0));
         Shuffleboard.getTab("Shooter").addNumber("Servo 1", hoodAngle::getPosition);
+        Shuffleboard.getTab("Shooter").addNumber("avgshooter", this::getShooterSpeed);
+        Shuffleboard.getTab("Shooter").addNumber("turret pos", turretEncoder::getPosition);
+        Shuffleboard.getTab("Shooter").addBoolean("At Speed", this::atSpeed);
+        Shuffleboard.getTab("Shooter").addBoolean("Shot", ()->shot);
+        Shuffleboard.getTab("Shooter").addNumber("Acceleration", ()->acceleration);
       }
-      Shuffleboard.getTab("Shooter").addNumber("avgshooter", this::getShooterSpeed);
-      Shuffleboard.getTab("Shooter").addNumber("turret pos", turretEncoder::getPosition);
-      enableLimelight(false);
+      enableLimelight(true);
     }
   }
 
@@ -176,11 +178,9 @@ public class Shooter extends SubsystemBase {
         //Want to rotate CLOCKWISE, which INCREASES encoder counts
         if (currentAngle < ShooterConstants.kMaxTurretAngle) {
           turretMotor.set(turn);
-          System.out.println("1");
           return false;
         }
         else {
-          System.out.println("a");
           turretMotor.set(0);
           return true;
         }
@@ -189,18 +189,15 @@ public class Shooter extends SubsystemBase {
         //Want to rotate COUNTER-CLOCKWISE, which DECREASES encoder counts
         if (currentAngle > ShooterConstants.kMinTurretAngle) {
           turretMotor.set(turn);
-          System.out.println("2");
           return false;
         }
         else {
           turretMotor.set(0);
-          System.out.println("b");
           return true;
         }
       }
     }
     else {
-      System.out.println("3");
       return true;
     }
   }
@@ -225,13 +222,11 @@ public class Shooter extends SubsystemBase {
         else {
           if (limelightOn) {
             if (mode > 3.1 || mode < 2.9) {
-              System.out.println("trying to turn it on");
               enableLimelight(limelightOn);
             }
           }
           else {
             if (mode > 1.1 || mode < 0.9) {
-              System.out.println("trying to turn it off");
               enableLimelight(limelightOn);
             }
           }
@@ -259,12 +254,12 @@ public class Shooter extends SubsystemBase {
       return distance;
     }
     else {
-      return -10.0;
+      return -1.0;
     }
   }
 
   public void powerShooter(double speed) {
-    speed = atSpeed()?0:speed;
+    //speed = atSpeed()?0:speed;
 
     shooterMotor1.set(speed);
     shooterMotor2.set(speed);
@@ -279,6 +274,7 @@ public class Shooter extends SubsystemBase {
       // shooterMotor1.set(1);
       // shooterMotor2.set(1);
       shooterSpeed = isFarAway()? 5500 : 5000;
+      shooterSpeed = 7000;
       shooterPID1.setReference(shooterSpeed, ControlType.kVelocity);
       shooterPID2.setReference(shooterSpeed, ControlType.kVelocity);
     }
@@ -292,26 +288,71 @@ public class Shooter extends SubsystemBase {
    * @return True if at speed, false if not.
    */
   public boolean atSpeed() {
-    return shooterEncoder1.getVelocity() > (shooterSpeed - 250);
+    return shooterEncoder1.getVelocity() > (4750);
   }
 
   int direction;
   public void ZeroTurret() {
+    TurretToPosition(0);
+  }
+  public double getTurretPosition() {
+    return turretEncoder.getPosition();
+  }
+  public double TurretToPosition(double targetPositon) {
     if (ShooterConstants.kHasShooter && ShooterConstants.kHasTurret) {
+      turretPID.setSetpoint(targetPositon);
       double turn = turretPID.calculate(turretEncoder.getPosition());
-      System.out.println("turn: "+turn);
-      // if (direction == 0) {
-        
-      // }
-      // if (turretEncoder.getPosition() > 0 ^ right) {
-        
-      // }
-      // else {
-
-      // }
       rotate(turn);
+      return turn;
+    }
+    return 0.0;
+  }
+  public void CalibrateTurret(double currentPosition) {
+    turretEncoder.setPosition(currentPosition);
+  }
+  
+  public double TryToAim(double initialPosition, double simulatedTarget) {
+    if (ShooterConstants.kHasShooter && ShooterConstants.kHasTurret) {
+      if (!limelightOn)
+        enableLimelight(true);
+      double v = tv.getDouble(0.0);
+      if (v > 0) {
+        double x = tx.getDouble(0.0);
+
+        if (Math.abs(x) < ShooterConstants.kAimingThreshold) {
+          //Target is within threshold, go ahead and shoot
+          rotate(0);
+          return -9999;
+        }
+        else {
+          //Target is not within threshold, rotate the turret
+          double turn = 0;
+          //turn = ShooterConstants.kP*x + ((x>0)? -ShooterConstants.kFF : ShooterConstants.kFF);
+          turretPID.setSetpoint(0);
+          turn = turretPID.calculate(getToggledTarget()-x); //to the right use -2.5
+          rotate(turn);
+          return simulatedTarget;
+        }
+      }
+      else {
+        //Okay, here we are. We have to sweep the turret in AUTO.
+        if (simulatedTarget < initialPosition) {
+          //We need to INCREASE our position to find that sweet gold!
+          TurretToPosition(simulatedTarget + 10);
+          return simulatedTarget + 10;
+        }
+        else {
+          //We need to DECREASE our position to find that sweet gold!
+          TurretToPosition(simulatedTarget - 10);
+          return simulatedTarget - 10;
+        }
+      }
+    }
+    else {
+      return -9999;
     }
   }
+
   /**
    * This method does everything to aim the turret using the limelight and shoot when ready.
    * If the turret cannot reach the desired angle, this method returns the speed the drice chassis needs to turn
@@ -334,6 +375,7 @@ public class Shooter extends SubsystemBase {
           //Target is not within threshold, rotate the turret
           double turn = 0;
           //turn = ShooterConstants.kP*x + ((x>0)? -ShooterConstants.kFF : ShooterConstants.kFF);
+          turretPID.setSetpoint(0);
           turn = turretPID.calculate(getToggledTarget()-x); //to the right use -2.5
           if (ShooterConstants.kHasTurret) {
             boolean driveChassis = rotate(turn);
@@ -455,32 +497,69 @@ public class Shooter extends SubsystemBase {
       }
     }
   }
+  Timer ballTimer = new Timer();
+  int ballCount = 0;
+  public void setBallCount(int ballCount) {
+    this.ballCount = ballCount;
+    ballTimer.reset();
+    ballTimer.start();
+  }
+  public boolean shotAllBalls() {
+    if (ballCount < 0) {
+      return true;
+    }
+    if (shotABall())
+      ballCount--;
+    if (ballCount == 0) {
+      ballCount = -1;
+      ballTimer.stop();
+      return true;
+    }
+    return false;
+  }
   double previousSpeed;
+  double previousTime;
   boolean wasAtSpeed;
+  boolean wasIncreasing;
+  double acceleration;
+  boolean shot;
   /**
    * This method uses current speed and recent speeds of the shooter to determine if a ball just went through it.
    * @return True if a ball was just shot
    */
   public boolean shotABall() {
+    double currentTime = ballTimer.get();
+    double deltaTime = currentTime - previousTime;
+    previousTime = currentTime;
     double currentSpeed = getShooterSpeed();
+    if (deltaTime == 0) {
+      shot = false;
+      wasIncreasing = true;
+      return false;
+    }
     if (wasAtSpeed) {
-      double delta = currentSpeed - previousSpeed;
-      if (delta < -40) {
+      acceleration = (currentSpeed - previousSpeed) / deltaTime;
+      if (wasIncreasing && acceleration < -800) {
         //Shot one!
-        System.out.println("Shot a ball!");
+        System.out.println("Shot a ball through the shooter!");
         previousSpeed = currentSpeed;
         wasAtSpeed = atSpeed();
+        shot = true;
+        wasIncreasing = false; //Cant reset in 2 loops
         return true;
       }
-      else if (delta < 0) {
-        //System.out.println("not yet... its "+delta);
+      else if (acceleration <= 0) {
         previousSpeed = currentSpeed;
+        shot = false;
         return false;
       }
+      else {
+        wasIncreasing = true;
+      }
     }
-    //System.out.println("fat chance");
     previousSpeed = currentSpeed;
     wasAtSpeed = atSpeed();
+    shot = false;
     return false;
   }
   /**

@@ -37,8 +37,8 @@ public class ShuffleboardHelper {
      * @param listName The name of the layout/list to put the motors in (for organization, it is in its own layout)
      * @param devices A map of devices and their names to put in the layout. Use <b>"Map.of()"</b> to create this.
      */
-    public static void addSparkMaxLayout(String listName, Map<CANSparkMax,String> devices) {
-        ShuffleboardLayout layout = Shuffleboard.getTab("ShuffleboardHelper").getLayout(listName, BuiltInLayouts.kList)
+    public static void addSparkMaxLayout(String tab, String listName, Map<CANSparkMax,String> devices) {
+        ShuffleboardLayout layout = Shuffleboard.getTab(tab).getLayout(listName, BuiltInLayouts.kList)
             .withSize(4, 4).withPosition(0, 0);
         devices.forEach((sparkMax, name)->{
             CANEncoder encoder = sparkMax.getEncoder();
