@@ -7,20 +7,26 @@
 
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.subsystems.Intake;
 
 public class LoadNextBall extends CommandBase {
   Intake intake;
   boolean hadBall;
   double oldPosition;
+  DoubleSupplier override;
 
   /**
    * Creates a new LoadNextBall.
    */
-  public LoadNextBall(Intake intake) {
+  public LoadNextBall(Intake intake, DoubleSupplier overrideInput) {
     addRequirements(intake);
     this.intake = intake;
+    override = overrideInput;
     //Shuffleboard.getTab("Intake").addString("Target", ()->{return "Target: "+oldPosition+", At: "+newPos;});
   }
 
@@ -71,6 +77,7 @@ public class LoadNextBall extends CommandBase {
         power = 0;
       }
     }
+    if (!IntakeConstants.kHasIntakeColorSensor) power = override.getAsDouble();
     intake.powerConveyor(power);
     hadBall = currentBall;
   }

@@ -119,7 +119,10 @@ public class Tools {
   
   public static class MathTools {
     public static double deadzone(double x) { //DZ = 0.15
-      if (Math.abs(x) < 0.15) {
+      return deadzone(x, 0.15);
+    }
+    public static double deadzone(double x, double dz) {
+      if (Math.abs(x) < dz) {
         return 0;
       } else {
         return x;

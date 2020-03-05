@@ -38,7 +38,7 @@ public abstract class Constants {
     public static RobotType GenerateConstants(RobotType robot) {
         switch (robot) {
             case CompBot: {
-                RobotName = "The Competiton Robot";
+                RobotName = "Karen the CompBot";
 
                 DriveConstants.kHasDriveTrain = true;
                 DriveConstants.kHasGyro = true;
@@ -48,19 +48,21 @@ public abstract class Constants {
                 IntakeConstants.kHasIntake = true;
                 ShooterConstants.kHasShooter = true;
                 ShooterConstants.kHasTurret = true;
-                LEDConstants.kHasLEDs = true;
+                LEDConstants.kHasLEDs = false;
+
+                IntakeConstants.kHasIntakeColorSensor = false;
 
                 DriveConstants.kDebug = false;
                 ControlPanelConstants.kDebug = false;
                 ClimberConstants.kDebug = false;
-                IntakeConstants.kDebug = false;
-                ShooterConstants.kDebug = false;
+                IntakeConstants.kDebug = true;
+                ShooterConstants.kDebug = true;
                 LEDConstants.kDebug = false;
 
                 //CAN WIRING:
                 ShooterConstants.kShooterMotor1Port = 33;
                 ShooterConstants.kShooterMotor2Port = 32;
-                ShooterConstants.kHoodAngleServoPort = 1; //PWM, not CAN
+                ShooterConstants.kHoodAngleServoPort = 0; //PWM, not CAN
                 ShooterConstants.kTurretMotorPort = 21;
                 DriveConstants.kLeftMotor1Port = 37;
                 DriveConstants.kLeftMotor2Port = 38;
@@ -75,6 +77,10 @@ public abstract class Constants {
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
                 ControlPanelConstants.kWheelRotatorMotorPort = 31;
                 ControlPanelConstants.kMechanismRotatorServoPort = 31; //PWM, not CAN
+                
+                IntakeConstants.kIntakeColorSensor = 0; //Multiplexer I2C, not CAN
+                IntakeConstants.kShooterColorSensor = 6; //Multiplexer I2C, not CAN
+                ControlPanelConstants.kControlPanelColorSensor = 3; //Multiplexer I2C, not CAN
 
                 //DRIVE CONSTANTS
                 DriveConstants.ksVolts = 0.195;
@@ -111,20 +117,20 @@ public abstract class Constants {
                 IntakeConstants.kIntakeFlipFF = 0;
                 IntakeConstants.kIntakeFlipMaxOutput = 1;
                 IntakeConstants.kIntakeFlipMinOutput = -1;
-                IntakeConstants.kIntakeFlipInEncoder = 0.0;
-                IntakeConstants.kIntakeFlipOutEncoder = -55.0;
+                IntakeConstants.kIntakeFlipInEncoder = -5.7467; //NOTE: This is NOT ZERO BECUASE YOU MUST RESET THE ROBOT TO THE OUTERMOST POSITION!
+                IntakeConstants.kIntakeFlipOutEncoder = -38; //NOTE: Different sprocket ratio, so different encoder value!
                 
-                IntakeConstants.kIntakeColorThesholdR = 930; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
-                IntakeConstants.kIntakeColorThesholdG = 1600; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
+                IntakeConstants.kIntakeColorThesholdR = 6000; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
+                IntakeConstants.kIntakeColorThesholdG = 10200; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
                 IntakeConstants.kIntakeColorThesholdB = 0;
                 IntakeConstants.kIntakeColorThesholdIR = 0;
                 IntakeConstants.kIntakeColorThesholdProximity = 350;
 
-                IntakeConstants.kShooterColorThesholdIR = 0;
+                IntakeConstants.kShooterColorThesholdR = 0;
                 IntakeConstants.kShooterColorThesholdG = 0;
                 IntakeConstants.kShooterColorThesholdB = 0;
                 IntakeConstants.kShooterColorThesholdIR = 0;
-                IntakeConstants.kShooterColorThesholdProximity = 200;
+                IntakeConstants.kShooterColorThesholdProximity = 100;
 
                 //SHOOTER CONSTANTS
                 
@@ -137,8 +143,8 @@ public abstract class Constants {
                 ShooterConstants.kShooterMinOutput = -1;
                 ShooterConstants.kMaxRPM = 5700;
 
-                ShooterConstants.kMaxTurretAngle = 130;//135
-                ShooterConstants.kMinTurretAngle = -130;//-135
+                ShooterConstants.kMaxTurretAngle = 100;//126 = 180degrees
+                ShooterConstants.kMinTurretAngle = -100;//-126 = 180 degrees
 
                 LEDConstants.kLEDPWMPort = 9;
             } break;
@@ -181,6 +187,10 @@ public abstract class Constants {
                 ControlPanelConstants.kColorSensorPort = I2C.Port.kOnboard; //I2C, not CAN
                 // ControlPanelConstants.kControlPanelRotatorMotorPort = 3;
                 // ControlPanelConstants.kWheelRotatorMotorPort = -1;
+
+                IntakeConstants.kIntakeColorSensor = 4; //Multiplexer I2C, not CAN
+                IntakeConstants.kShooterColorSensor = 7; //Multiplexer I2C, not CAN
+                // ControlPanelConstants.kControlPanelColorSensor = 3; //Multiplexer I2C, not CAN
 
                 //DRIVE CONSTANTS
                 DriveConstants.ksVolts = 0.195;
@@ -415,6 +425,7 @@ public abstract class Constants {
         public static I2C.Port kColorSensorPort = I2C.Port.kOnboard;
         public static int kWheelRotatorMotorPort = 7;
         public static int kMechanismRotatorServoPort = -1; //PWM
+        public static int kControlPanelColorSensor = 7; //I2C on multiplexer
 
         public static double kSliceWidthCounts = 32;
         public static double kRedColorDistanceThreshold = 0.17;
@@ -467,12 +478,16 @@ public abstract class Constants {
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
+        public static boolean kHasIntakeColorSensor = false;
         public static boolean kDebug = false;
         
         public static int kIntakeFlipMotorPort = 7;
         public static int kIntakeMotorPort = 7;
         public static int kConveyorMotor1Port = 7;
         public static int kConveyorMotor2Port = 7;
+
+        public static int kIntakeColorSensor = 7;
+        public static int kShooterColorSensor = 7;
 
         public static double kIntakeFlipP = 0.0001;
         public static double kIntakeFlipI = 1e-4;

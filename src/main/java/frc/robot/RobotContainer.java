@@ -161,7 +161,8 @@ public class RobotContainer {
           -MathTools.deadzone(m_driverJoystick.getY(GenericHID.Hand.kLeft)), 
           turn, 
           m_driverJoystick.getBumper(GenericHID.Hand.kRight), (l,r)->{
-            m_driveTrain.tankDriveVolts(l*10, r*10);
+            //m_driveTrain.tankDriveVolts(l*10, r*10);
+            m_driveTrain.normalTank(l, r);
           });
       };
       switch (OIConstants.teleop) {
@@ -185,7 +186,11 @@ public class RobotContainer {
       //new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
       //new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
       //Command lnb = new EasyIntake(m_intake);//new LoadNextBall(m_intake);
-      Command lnb = new LoadNextBall(m_intake);
+      Command lnb = new LoadNextBall(m_intake, ()->{
+        double speed = MathTools.deadzone( 
+        m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft));
+      double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight));
+      return (speed-aspeed);});
 
       new JoystickButton(m_manipulatorJoystick, Button.kBumperLeft.value).whenPressed(()->{
         m_intake.setFlipper(true);
@@ -216,7 +221,9 @@ public class RobotContainer {
         
       },m_intake));
     }
+    
     if (ShooterConstants.kHasShooter) {
+      new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(m_shooter::toggleLimelight);
       m_shooter.setDefaultCommand(new RunCommand(()->{
         if (m_manipulatorJoystick.getBButton()) {
           m_shooter.ZeroTurret();
@@ -225,12 +232,12 @@ public class RobotContainer {
           m_shooter.AutoAimAndShoot();
         }
         else {
-          double turn = m_manipulatorJoystick.getX(GenericHID.Hand.kLeft);
+          double turn = MathTools.deadzone(m_manipulatorJoystick.getX(GenericHID.Hand.kLeft));
           m_shooter.powerTurret(turn);
           //m_shooter.disableLimelight();
         }
-
         double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
+        //m_shooter.powerShooter(speed);
         if (speed < -0.7) {
           m_shooter.powerShooter(speed);
         }else {
@@ -239,10 +246,10 @@ public class RobotContainer {
         boolean down = m_manipulatorJoystick.getBackButton();
         boolean up = m_manipulatorJoystick.getStartButton();
         if (down) {
-          m_shooter.hoodPosition(99);
+          m_shooter.hoodPower(1);
         }
         else if (up) {
-          m_shooter.hoodPosition(-99);
+          m_shooter.hoodPower(-1);
         }
         else {
           m_shooter.stopHood();
@@ -294,7 +301,7 @@ public class RobotContainer {
       m_climber.setDefaultCommand(new RunCommand(()->{
         double up = m_driverJoystick.getTriggerAxis(GenericHID.Hand.kLeft);
         double down = m_driverJoystick.getTriggerAxis(GenericHID.Hand.kRight);
-        m_climber.set(up-down);
+        m_climber.set(MathTools.deadzone(up-down));
       }, m_climber));
     }
   }
@@ -325,10 +332,10 @@ public class RobotContainer {
   private void CreateAutoCommandsForAutoSelector() throws IOException {
     DefaultAuto = RamseteCommand("straight");
     //These are named exactly as they are in "Autonomous Strategy" on page 2 in the Google Drive.
-    DirectTrench = CalibrateTurretPosition(-107).andThen(
-      //SafetyShoot(3, false),
-      
-      ((/*SudoTurret(0,MaintainIntake(*/RamseteCommand("DirectTrenchPickupShoot3").deadlineWith(setZoom(2)))));
+    DirectTrench = CalibrateTurretPosition(-126).andThen(
+      SafetyShoot(3, false),
+      //was DirectTrenchPickupShoot3
+      ((/*SudoTurret(0,0.3,*/MaintainIntake(RamseteCommand("ForwardTrenchPickup").deadlineWith(setZoom(2))))));
       //new AutoSweepTurret(m_shooter, 0, 90),
       //RapidShoot(1, true));
     Test = SafetyShoot(3,false).andThen(MaintainIntake(RamseteCommand("ForwardTrenchPickup")));
@@ -362,19 +369,19 @@ public class RobotContainer {
    */
   Command MaintainIntake(Command cmd) {
     return new InstantCommand(()->m_intake.setFlipper(true)).andThen(cmd.deadlineWith(
-      new LoadNextBall(m_intake), new InstantCommand(()->m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7))
+      new LoadNextBall(m_intake, ()->1.0), new InstantCommand(()->m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7))
     )).andThen(new InstantCommand(()->{
       m_intake.setFlipper(false);
       m_intake.powerIntake(0);
     }));
   }
-  Command SudoTurret(double targetPosition, Command cmd) {
-    return cmd.deadlineWith(new RunCommand(()->m_shooter.TurretToPosition(targetPosition)).
+  Command SudoTurret(double targetPosition, double max, Command cmd) {
+    return cmd.deadlineWith(new RunCommand(()->m_shooter.TurretToPosition(targetPosition, max)).
     withInterrupt(()->{return Math.abs(m_shooter.getTurretPosition()-targetPosition) < 10;}));
   }
   @Deprecated
   ParallelCommandGroup xAutoIntake(Intake intake) {
-    return new ParallelCommandGroup(new LoadNextBall(intake), new RunCommand(()->{
+    return new ParallelCommandGroup(new LoadNextBall(intake,()->0), new RunCommand(()->{
       intake.powerIntake(0.7);
       intake.setFlipper(true);
     }).andThen(()->{

@@ -51,6 +51,10 @@ public class ControlledServo {
     prevTime = time;
   }
   public void stop() {
+    double time = timer.get(); //Get the current time
+    position += speed * (time - prevTime); //Update "encoders"
+    prevTime = time;
+    speed = 0;
     servo.stopMotor();
   }
   /**

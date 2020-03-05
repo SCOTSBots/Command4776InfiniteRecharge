@@ -85,6 +85,12 @@ public class DriveTrain extends SubsystemBase {
       m_rightEncoder.setPositionConversionFactor(DriveConstants.kRevolutionsToMeters);
       m_leftEncoder.setVelocityConversionFactor(DriveConstants.kRPMtoMetersPerSecond);
       m_rightEncoder.setVelocityConversionFactor(DriveConstants.kRPMtoMetersPerSecond);
+
+      m_leftFrontMotor.setSmartCurrentLimit(40);
+      m_leftBackMotor.setSmartCurrentLimit(40);
+      m_rightFrontMotor.setSmartCurrentLimit(40);
+      m_rightBackMotor.setSmartCurrentLimit(40);
+
       resetEncoders();
       m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()));
       
@@ -247,6 +253,11 @@ public class DriveTrain extends SubsystemBase {
       m_leftFrontMotor.setVoltage(leftVolts);
       m_rightFrontMotor.setVoltage(-rightVolts);
       m_drive.feed();
+    }
+  }
+  public void normalTank(double left, double right) {
+    if (DriveConstants.kHasDriveTrain) {
+      m_drive.tankDrive(left, right);
     }
   }
 

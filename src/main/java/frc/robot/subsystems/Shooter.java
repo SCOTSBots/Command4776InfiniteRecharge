@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.ControlledServo;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ShooterConstants;
@@ -123,7 +124,6 @@ public class Shooter extends SubsystemBase {
       //Get the Network Table Entry that controls the camera stream output see we can change the PnP
       cameraMode = table.getEntry("stream");
       pipeline = table.getEntry("pipeline");
-      setZoomPipeline(1);
       //Add togglers for the NT entries
       ShuffleboardHelper.AddToggle("Limelight", "LEDMode", LEDMode::setDouble, new Toggle<Integer>(1, 3));
       //ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", cameraMode::setDouble, new Toggle<Integer>(1, 2));
@@ -151,14 +151,16 @@ public class Shooter extends SubsystemBase {
         Shuffleboard.getTab("Shooter").addString("Side Mode", this::printSide);
         Shuffleboard.getTab("Shooter").addBoolean("Far Away", this::isFarAway);
         Shuffleboard.getTab("Shooter").addNumber("TX", ()->tx.getDouble(0));
-        Shuffleboard.getTab("Shooter").addNumber("Servo 1", hoodAngle::getPosition);
+        Shuffleboard.getTab("Shooter").addNumber("Hood Angle", hoodAngle::getPosition);
         Shuffleboard.getTab("Shooter").addNumber("avgshooter", this::getShooterSpeed);
-        Shuffleboard.getTab("Shooter").addNumber("turret pos", turretEncoder::getPosition);
+        //Shuffleboard.getTab("Shooter").addNumber("turret pos", turretEncoder::getPosition); ADDED IN TURRET DEBUG
         Shuffleboard.getTab("Shooter").addBoolean("At Speed", this::atSpeed);
         Shuffleboard.getTab("Shooter").addBoolean("Shot", ()->shot);
         Shuffleboard.getTab("Shooter").addNumber("Acceleration", ()->acceleration);
       }
-      enableLimelight(true);
+        
+      enableLimelight(false);
+      setZoomPipeline(1);
     }
   }
 
@@ -210,6 +212,7 @@ public class Shooter extends SubsystemBase {
     return counts;
   }
   int time=0;
+  int pipelineTime=50;
   int delay=100;
   @Override
   public void periodic() {
@@ -231,6 +234,31 @@ public class Shooter extends SubsystemBase {
             }
           }
         }
+        time=0;
+      }
+      if (pipelineTime++ > delay) {
+        double mode = LEDMode.getDouble(0.0);
+        if (mode < 0.1){
+          setZoomPipeline(zoomLevel);
+        }
+        else {
+          if (zoomLevel == 1) {
+            if (mode > 1.1 || mode < 0.9) {
+              setZoomPipeline(zoomLevel);
+            }
+          }
+          else if(zoomLevel == 2) {
+            if (mode > 2.1 || mode < 1.9) {
+              setZoomPipeline(zoomLevel);
+            }
+          }
+          else if(zoomLevel == 3) {
+            if (mode > 3.1 || mode < 2.9) {
+              setZoomPipeline(zoomLevel);
+            }
+          }
+        }
+        pipelineTime=0;
       }
     }
   }
@@ -239,6 +267,9 @@ public class Shooter extends SubsystemBase {
   }
   public void hoodPosition(double target) {
     hoodAngle.gotoPosition(target);
+  }
+  public void hoodPower(double speed) {
+    hoodAngle.set(speed);
   }
 
   public double getLimelightDistance() {
@@ -275,6 +306,7 @@ public class Shooter extends SubsystemBase {
       // shooterMotor2.set(1);
       shooterSpeed = isFarAway()? 5500 : 5000;
       shooterSpeed = 7000;
+      //shooterSpeed = 3700;
       shooterPID1.setReference(shooterSpeed, ControlType.kVelocity);
       shooterPID2.setReference(shooterSpeed, ControlType.kVelocity);
     }
@@ -288,20 +320,21 @@ public class Shooter extends SubsystemBase {
    * @return True if at speed, false if not.
    */
   public boolean atSpeed() {
-    return shooterEncoder1.getVelocity() > (4750);
+    return getShooterSpeed() > 5000;//3300;
   }
-
+  //auto 10 = 3300 rpm
   int direction;
   public void ZeroTurret() {
-    TurretToPosition(0);
+    TurretToPosition(0, 1);
   }
   public double getTurretPosition() {
     return turretEncoder.getPosition();
   }
-  public double TurretToPosition(double targetPositon) {
+  public double TurretToPosition(double targetPositon, double max) {
     if (ShooterConstants.kHasShooter && ShooterConstants.kHasTurret) {
       turretPID.setSetpoint(targetPositon);
       double turn = turretPID.calculate(turretEncoder.getPosition());
+      turn = MathUtil.clamp(turn, -max, max);
       rotate(turn);
       return turn;
     }
@@ -338,12 +371,12 @@ public class Shooter extends SubsystemBase {
         //Okay, here we are. We have to sweep the turret in AUTO.
         if (simulatedTarget < initialPosition) {
           //We need to INCREASE our position to find that sweet gold!
-          TurretToPosition(simulatedTarget + 10);
+          TurretToPosition(simulatedTarget + 10, 1);
           return simulatedTarget + 10;
         }
         else {
           //We need to DECREASE our position to find that sweet gold!
-          TurretToPosition(simulatedTarget - 10);
+          TurretToPosition(simulatedTarget - 10, 1);
           return simulatedTarget - 10;
         }
       }
@@ -399,6 +432,9 @@ public class Shooter extends SubsystemBase {
     else {
       return 0;
     }
+  }
+  public void toggleLimelight() {
+    enableLimelight(!limelightOn);
   }
   public void disableLimelight() {
     if (limelightOn)

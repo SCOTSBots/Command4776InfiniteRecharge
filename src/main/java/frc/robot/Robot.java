@@ -41,12 +41,13 @@ public class Robot extends TimedRobot {
     // and put our
     // autonomous chooser on the dashboard.
     //CameraServer.getInstance().startAutomaticCapture();
-    Constants.GenerateConstants(RobotType.PracticeBot);
+    //Constants.GenerateConstants(RobotType.PracticeBot);
+    Constants.GenerateConstants(RobotType.CompBot);
     //Constants.GenerateConstants(RobotType.TestBoard);
     m_robotContainer = new RobotContainer();
 
     //Add the USB Camera
-    CameraServer.getInstance().startAutomaticCapture();
+    //CameraServer.getInstance().startAutomaticCapture();
 
     try {
       m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -55,6 +56,7 @@ public class Robot extends TimedRobot {
       System.out.println("Problem with creating the AUTO PROGRAM!!!!!");
       e.printStackTrace();
     }
+    CameraServer.getInstance().startAutomaticCapture();
   }
   Timer timer;
   /**
