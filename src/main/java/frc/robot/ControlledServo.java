@@ -19,7 +19,7 @@ public class ControlledServo {
   double position;
   double prevTime;
   double speed;
-  double threshold = 0.05;
+  double threshold = 0.03;
   /**
    * Main constructor. Just specify the port and BOOM, all done.
    * @param port - The PWM port the servo is plugged into.
@@ -31,7 +31,9 @@ public class ControlledServo {
     timer.start();
     position = 0;
     speed = 0;
+    reached = true;
   }
+  boolean reached;
   public ControlledServo(int port, double position) {
     this(port);
     setPosition(position);
@@ -39,14 +41,25 @@ public class ControlledServo {
   public void setPosition(double position) {
     this.position = position;
   }
-  public void gotoPosition(double target) {
+  double target = 0;
+  public void setGOTO(double pos) {
+    target = pos;
+    reached = false;
+  }
+  public void gotoPosition() {
     double time = timer.get(); //Get the current time
     position += speed * (time - prevTime); //Update "encoders"
-    if (Math.abs(target - position) < threshold) {
-      stop();
+    if (!reached) {
+      if (Math.abs(target - position) < threshold) {
+        stop();
+        reached = true;
+      }
+      else {
+        set(target > position? 1:-1);
+      }
     }
     else {
-      set(target > position? 1:-1);
+      stop();
     }
     prevTime = time;
   }
@@ -56,6 +69,10 @@ public class ControlledServo {
     prevTime = time;
     speed = 0;
     servo.stopMotor();
+  }
+  public void externalSet(double speed) {
+    reached = true;
+
   }
   /**
    * Set the servo speed (like a normal motor).

@@ -16,6 +16,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
@@ -54,6 +55,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import static java.util.Map.entry;
 
@@ -122,14 +124,22 @@ public class RobotContainer {
       entry(CommandsToChoose.Wall, Wall),
       entry(CommandsToChoose.DirectRndzvs, DirectRndzvs),
       entry(CommandsToChoose.PickupMissedBalls, PickupMissedBalls),
-      entry(CommandsToChoose.Test, Test)
+      entry(CommandsToChoose.MidZone, MidZone),
+      entry(CommandsToChoose.Test, Test),
+      entry(CommandsToChoose.Shoot3, Shoot3),
+      entry(CommandsToChoose.Shoot3Drive, Shoot3Drive),
+      entry(CommandsToChoose.SuperTrench, SuperTrench)
       ), this::select);
     m_chooser.setDefaultOption("Default Auto", CommandsToChoose.Default);
     m_chooser.addOption("Direct Trench", CommandsToChoose.DirectTrench);
     m_chooser.addOption("Wall", CommandsToChoose.Wall);
     m_chooser.addOption("Direct Rendezvous", CommandsToChoose.DirectRndzvs);
     m_chooser.addOption("Pickup Missed Balls", CommandsToChoose.PickupMissedBalls);
-
+    m_chooser.addOption("Mid Zone", CommandsToChoose.MidZone);
+    m_chooser.addOption("Shoot3", CommandsToChoose.Shoot3);
+    m_chooser.addOption("Shoot3Drive", CommandsToChoose.Shoot3Drive);
+    m_chooser.addOption("SuperTrench", CommandsToChoose.SuperTrench);
+    
     Shuffleboard.getTab("Auto").add(m_chooser);
   }
 
@@ -182,7 +192,10 @@ public class RobotContainer {
     if (IntakeConstants.kHasIntake) {
       new JoystickButton(m_manipulatorJoystick, Button.kX.value).whenPressed(()->{m_intake.setFlipper(false);});
       
-      //new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
+      new JoystickButton(m_driverJoystick, Button.kX.value).whenPressed(()->
+        IntakeConstants.kHasIntakeColorSensor = !IntakeConstants.kHasIntakeColorSensor);
+      
+        //new JoystickButton(m_manipulatorJoystick, Button.kStart.value).whenPressed(()->{m_intake.resetFlipper(0);});
       //new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(()->{m_intake.powerFlipper(m_manipulatorJoystick.getY(GenericHID.Hand.kLeft));});
       //new JoystickButton(m_manipulatorJoystick, Button.kBack.value).whenPressed(m_intake::toggleFlipper);
       //Command lnb = new EasyIntake(m_intake);//new LoadNextBall(m_intake);
@@ -190,7 +203,7 @@ public class RobotContainer {
         double speed = MathTools.deadzone( 
         m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft));
       double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight));
-      return (speed-aspeed);});
+      return (speed-aspeed);},30);
 
       new JoystickButton(m_manipulatorJoystick, Button.kBumperLeft.value).whenPressed(()->{
         m_intake.setFlipper(true);
@@ -200,7 +213,7 @@ public class RobotContainer {
         m_intake.powerIntake(0);
         lnb.cancel();
       }).whileActiveContinuous(()->{
-        m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7);
+        m_intake.powerIntake(0.7);//m_intake.ballInIntake()?0.3:0.7);
       });
       new JoystickButton(m_manipulatorJoystick, Button.kBumperRight.value).whenReleased(()->{
         m_intake.powerIntake(0);
@@ -212,37 +225,82 @@ public class RobotContainer {
       // });
       
       m_intake.setDefaultCommand(new RunCommand(()->{
-        //if (m_manipulatorJoystick.getYButton()) {
-          double speed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft) );
-          double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
-          boolean ready = m_shooter.atSpeed();
-          //m_intake.powerConveyor(ready?1:0);
-          m_intake.powerConveyor(ready?1:speed-aspeed);
+          if (m_driverJoystick.getBumper(Hand.kLeft)) {
+            m_intake.powerConveyor(0);
+          }
+          else if (m_manipulatorJoystick.getStickButton(Hand.kRight)) {
+            boolean ready = m_shooter.atSpeed();
+            m_intake.powerConveyor(ready?1:0);
+          }
+          else {
+            
+            double speed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft) );
+            double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
+          
+            m_intake.powerConveyor(speed-aspeed);  
+          }
+          // Old Code:
+          // double speed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft) );
+          // double aspeed = MathTools.deadzone( m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight) );
+          // boolean ready = m_shooter.atSpeed();
+          // m_intake.powerConveyor(ready?1:speed-aspeed);
         
       },m_intake));
     }
     
     if (ShooterConstants.kHasShooter) {
       new JoystickButton(m_manipulatorJoystick, Button.kY.value).whenPressed(m_shooter::toggleLimelight);
+      new JoystickButton(m_driverJoystick, Button.kBumperLeft.value).whenPressed(new WaitUntilCommand(m_shooter::turretIntoClimbMode));
+      new JoystickButton(m_driverJoystick, Button.kY.value).whenPressed(()->m_shooter.CalibrateTurret(0));
       m_shooter.setDefaultCommand(new RunCommand(()->{
-        if (m_manipulatorJoystick.getBButton()) {
-          m_shooter.ZeroTurret();
-        }
-        else if (m_manipulatorJoystick.getAButton()) {
-          m_shooter.AutoAimAndShoot();
+        if (m_driverJoystick.getBumper(Hand.kLeft)) {
+          m_shooter.turretIntoClimbMode();
         }
         else {
-          double turn = MathTools.deadzone(m_manipulatorJoystick.getX(GenericHID.Hand.kLeft));
-          m_shooter.powerTurret(turn);
-          //m_shooter.disableLimelight();
+          if (m_manipulatorJoystick.getBButton()) {
+            m_shooter.ZeroTurret();
+          }
+          else if (m_manipulatorJoystick.getAButton()) {
+            m_shooter.AutoAimAndShoot();
+          }
+          else {
+            double turn = MathTools.deadzone(m_manipulatorJoystick.getX(GenericHID.Hand.kLeft));
+            m_shooter.powerTurret(turn);
+            //m_shooter.disableLimelight();
+          }
+          double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
+          //m_shooter.powerShooter(speed);
+          if (speed < -0.7) {
+            m_shooter.powerShooter(speed);
+          }else {
+            m_shooter.powerShooter(speed>0.5);
+          }
         }
-        double speed = -m_manipulatorJoystick.getY(GenericHID.Hand.kRight);
-        //m_shooter.powerShooter(speed);
-        if (speed < -0.7) {
-          m_shooter.powerShooter(speed);
-        }else {
-          m_shooter.powerShooter(speed>0.5);
+        int pov = m_manipulatorJoystick.getPOV();
+        switch(pov) {
+          case 0: {//UP DPAD
+            m_shooter.setZoomPipeline(2);
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionMid);
+            m_shooter.setSpeeds(5000, 7000);
+          }
+            break;
+          case 90: {//Right DPAD
+            m_shooter.setZoomPipeline(1);
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionReallyCloseWall);
+            m_shooter.setSpeeds(4500, 7000);
+          }
+            break;
+          case 180:
+          break;
+          case 270: {//LEFT DPAD
+            m_shooter.setZoomPipeline(1);
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionClose);
+            m_shooter.setSpeeds(4750, 7000);
+          }
+            break;
         }
+        m_shooter.toggleSide(pov == 180);
+        
         boolean down = m_manipulatorJoystick.getBackButton();
         boolean up = m_manipulatorJoystick.getStartButton();
         if (down) {
@@ -252,23 +310,8 @@ public class RobotContainer {
           m_shooter.hoodPower(-1);
         }
         else {
-          m_shooter.stopHood();
+          m_shooter.hoodHoldPosition();
         }
-        int pov = m_manipulatorJoystick.getPOV();
-        switch(pov) {
-          case 0:
-            m_shooter.setZoomPipeline(2);
-            break;
-          case 90:
-            m_shooter.setZoomPipeline(3);
-            break;
-          case 180:
-          break;
-          case 270:
-            m_shooter.setZoomPipeline(1);
-            break;
-        }
-        m_shooter.toggleSide(pov == 180);
       },m_shooter));
     }
     if (LEDConstants.kHasLEDs) {
@@ -299,9 +342,14 @@ public class RobotContainer {
     }
     if (ClimberConstants.kHasClimber) {
       m_climber.setDefaultCommand(new RunCommand(()->{
-        double up = m_driverJoystick.getTriggerAxis(GenericHID.Hand.kLeft);
-        double down = m_driverJoystick.getTriggerAxis(GenericHID.Hand.kRight);
-        m_climber.set(MathTools.deadzone(up-down));
+        if (m_driverJoystick.getBumper(Hand.kLeft)) {
+          double up = m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kLeft);
+          double down = m_manipulatorJoystick.getTriggerAxis(GenericHID.Hand.kRight);
+          m_climber.set(MathTools.deadzone(up-down));
+        }
+        else {
+          m_climber.set(0);
+        }
       }, m_climber));
     }
   }
@@ -332,17 +380,35 @@ public class RobotContainer {
   private void CreateAutoCommandsForAutoSelector() throws IOException {
     DefaultAuto = RamseteCommand("straight");
     //These are named exactly as they are in "Autonomous Strategy" on page 2 in the Google Drive.
-    DirectTrench = CalibrateTurretPosition(-126).andThen(
-      SafetyShoot(3, false),
+    DirectTrench = SetShooterSpeeds(4500, 7000).andThen(CalibrateTurretPosition(-126).andThen(
+      TimedShoot(3, false, 5),
       //was DirectTrenchPickupShoot3
-      ((/*SudoTurret(0,0.3,*/MaintainIntake(RamseteCommand("ForwardTrenchPickup").deadlineWith(setZoom(2))))));
+      ((/*SudoTurret(0,0.3,*/MaintainIntake(RamseteCommand("ForwardTrenchPickup").deadlineWith(setZoom(2)))))
+    ));
       //new AutoSweepTurret(m_shooter, 0, 90),
       //RapidShoot(1, true));
-    Test = SafetyShoot(3,false).andThen(MaintainIntake(RamseteCommand("ForwardTrenchPickup")));
+    Command c = RamseteCommand("TrenchButCool");
+    DirectTrench = SetShooterSpeeds(3300, 7000).andThen(CalibrateTurretPosition(-126).andThen(
+      TimedShoot(3, false, 5),
+      //was DirectTrenchPickupShoot3
+      ((/*SudoTurret(0,0.3,*/MaintainIntake(RamseteCommand("ForwardTrenchPickup").deadlineWith(setZoom(2)))))
+    ));
+    Shoot3 = TimedShoot(3, false, 7);
+    Shoot3Drive = TimedShoot(3, false, 7).andThen(RamseteCommand("straight"));
+    MidZone = CalibrateTurretPosition(-60).andThen(RamseteCommand("HP47m"),TimedShoot(3,true,5)
+    //,MaintainIntake(RamseteCommand("MoveMid"))
+    );
+    
 
+    Test = SafetyShoot(3,false, 7.).andThen(MaintainIntake(RamseteCommand("ForwardTrenchPickup")));
     Wall = new PrintCommand("Wall command ran.");
     DirectRndzvs = new PrintCommand("Rendezvous command ran.");
+    MidZone = new PrintCommand("h");//Wall;//RamseteCommand("MoveMid").andThen(SafetyShoot(3, false, 5), RamseteCommand("MidToPickup"));
     PickupMissedBalls = new PrintCommand("PickupMissedBalls command ran.");
+    SuperTrench = SetShooterSpeeds(3300, 7000).andThen(CalibrateTurretPosition(-126)).andThen(
+      TimedShoot(3, false, 5)
+      //, MaintainIntake(RamseteCommand("ForwardTrenchPickup").deadlineWith(TimedShoot(-1, false, 10), AutoAimer(90, 0.5)))
+    );
   }
   public Command Test;
   public Command DefaultAuto;
@@ -350,6 +416,15 @@ public class RobotContainer {
   public Command DirectTrench;
   public Command DirectRndzvs;
   public Command PickupMissedBalls;
+  public Command MidZone;
+  public Command Shoot3;
+  public Command Shoot3Drive;
+  public Command SuperTrench;
+  Command AutoAimer(double targetPosition, double max) {
+    Command c = new RunCommand(()->m_shooter.SudoTurretToPosition(targetPosition, max)).
+    withInterrupt(()->Math.abs(m_shooter.getTurretPosition()-targetPosition) < 10);
+    return c.andThen(new RunCommand(m_shooter::AutoAimAndShoot));
+  }
   InstantCommand setZoom(int level) {
     return new InstantCommand(()->m_shooter.setZoomPipeline(level));
   }
@@ -359,29 +434,32 @@ public class RobotContainer {
   InstantCommand CalibrateTurretPosition(double targetPosition) {
     return new InstantCommand(()->m_shooter.CalibrateTurret(targetPosition));
   }
+  InstantCommand SetShooterSpeeds(double targetSpeed, double pid) {
+    return new InstantCommand(()->m_shooter.setSpeeds(targetSpeed, pid));
+  }
   Command StealAuto() throws IOException {
     return MaintainIntake(RamseteCommand("straight").andThen(BackwardsRamseteCommand("backup")));
   }
   /**
    * This runs the intake while you are running your command.
-   * @param cmd The command you wanr to run at he same time. Usually a RamseteCommand
+   * @param cmd The command you want to run at he same time. Usually a RamseteCommand
    * @return the output command
    */
   Command MaintainIntake(Command cmd) {
     return new InstantCommand(()->m_intake.setFlipper(true)).andThen(cmd.deadlineWith(
-      new LoadNextBall(m_intake, ()->1.0), new InstantCommand(()->m_intake.powerIntake(m_intake.ballInIntake()?0.3:0.7))
+      new LoadNextBall(m_intake, ()->m_intake.ballInShooter()?0.0:1.0, 40), new InstantCommand(()->m_intake.powerIntake(m_intake.ballInShooter()?0.3:0.7))
     )).andThen(new InstantCommand(()->{
       m_intake.setFlipper(false);
       m_intake.powerIntake(0);
     }));
   }
   Command SudoTurret(double targetPosition, double max, Command cmd) {
-    return cmd.deadlineWith(new RunCommand(()->m_shooter.TurretToPosition(targetPosition, max)).
+    return cmd.deadlineWith(new RunCommand(()->m_shooter.SudoTurretToPosition(targetPosition, max)).
     withInterrupt(()->{return Math.abs(m_shooter.getTurretPosition()-targetPosition) < 10;}));
   }
   @Deprecated
   ParallelCommandGroup xAutoIntake(Intake intake) {
-    return new ParallelCommandGroup(new LoadNextBall(intake,()->0), new RunCommand(()->{
+    return new ParallelCommandGroup(new LoadNextBall(intake,()->0, 30), new RunCommand(()->{
       intake.powerIntake(0.7);
       intake.setFlipper(true);
     }).andThen(()->{
@@ -420,15 +498,28 @@ public class RobotContainer {
 
   
   private enum CommandsToChoose {
-    Default, DirectTrench, Wall, DirectRndzvs, PickupMissedBalls, Test
+    Default, DirectTrench, Wall, DirectRndzvs, PickupMissedBalls, Test, MidZone, Shoot3, Shoot3Drive, SuperTrench;
   }
 
   private CommandsToChoose select() {
     return m_chooser.getSelected();
     //return CommandsToChoose.Test;
   }
-  
-  private SequentialCommandGroup SafetyShoot(int setBalls, boolean aim) {
+  private Command TimedShoot(int setBalls, boolean aim, double timeout) {
+    Command main = new RunCommand(()->{
+      m_shooter.powerShooter(true);
+      boolean shoot = m_shooter.atSpeed();
+      boolean charge = !m_intake.ballInShooter();
+      m_intake.powerConveyor(charge || shoot?1:0);
+      m_intake.powerIntake(0);
+      double chassisTurn = aim?0*m_shooter.AutoAimAndShoot():0;
+      m_driveTrain.tankDriveVolts(chassisTurn, -chassisTurn);
+    }, m_driveTrain, m_shooter, m_intake).withInterrupt(()->false)
+    .withTimeout(timeout)
+    .andThen(()->{m_shooter.enableLimelight(false); m_shooter.powerShooter(false); });
+    return main;
+  }
+  private SequentialCommandGroup SafetyShoot(int setBalls, boolean aim, double timeout) {
     Command main = new RunCommand(()->{
       if (setBalls >= 0) {
         m_intake.setBallsInRobot(setBalls);
@@ -448,7 +539,7 @@ public class RobotContainer {
     }, m_driveTrain, m_shooter, m_intake)
     .withInterrupt(()->{
       return m_shooter.shotAllBalls();
-    }).withTimeout(7)
+    }).withTimeout(timeout)
     .andThen(()->{m_shooter.enableLimelight(false); m_shooter.powerShooter(false); });
     return new InstantCommand(()->m_shooter.setBallCount(setBalls)).andThen(main);
   }

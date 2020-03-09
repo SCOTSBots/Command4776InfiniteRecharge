@@ -193,21 +193,21 @@ public class Intake extends SubsystemBase {
     ballsInRobot = newBalls;
   }
   public boolean ballInIntake() {
-    boolean r = intakeColorSensor.getRed() > IntakeConstants.kIntakeColorThesholdR;
-    boolean g = intakeColorSensor.getGreen() > IntakeConstants.kIntakeColorThesholdG;
-    boolean b = intakeColorSensor.getBlue() > IntakeConstants.kIntakeColorThesholdB;
-    boolean ir = intakeColorSensor.getIR() > IntakeConstants.kIntakeColorThesholdIR;
+    // boolean r = intakeColorSensor.getRed() > IntakeConstants.kIntakeColorThesholdR;
+    // boolean g = intakeColorSensor.getGreen() > IntakeConstants.kIntakeColorThesholdG;
+    // boolean b = intakeColorSensor.getBlue() > IntakeConstants.kIntakeColorThesholdB;
+    // boolean ir = intakeColorSensor.getIR() > IntakeConstants.kIntakeColorThesholdIR;
     boolean proximity = intakeColorSensor.getProximity() > IntakeConstants.kIntakeColorThesholdProximity;
-    boolean in = r && g;
+    boolean in = proximity;
 
     return in;
   }
 
   public boolean ballInShooter() {
-    boolean r = shooterColorSensor.getRed() > IntakeConstants.kShooterColorThesholdR;
-    boolean g = shooterColorSensor.getGreen() > IntakeConstants.kShooterColorThesholdG;
-    boolean b = shooterColorSensor.getBlue() > IntakeConstants.kShooterColorThesholdB;
-    boolean ir = shooterColorSensor.getIR() > IntakeConstants.kShooterColorThesholdIR;
+    // boolean r = shooterColorSensor.getRed() > IntakeConstants.kShooterColorThesholdR;
+    // boolean g = shooterColorSensor.getGreen() > IntakeConstants.kShooterColorThesholdG;
+    // boolean b = shooterColorSensor.getBlue() > IntakeConstants.kShooterColorThesholdB;
+    // boolean ir = shooterColorSensor.getIR() > IntakeConstants.kShooterColorThesholdIR;
     boolean proximity = shooterColorSensor.getProximity() > IntakeConstants.kShooterColorThesholdProximity;
     return proximity;
   }

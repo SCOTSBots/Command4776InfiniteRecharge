@@ -19,14 +19,16 @@ public class LoadNextBall extends CommandBase {
   boolean hadBall;
   double oldPosition;
   DoubleSupplier override;
+  double off;
 
   /**
    * Creates a new LoadNextBall.
    */
-  public LoadNextBall(Intake intake, DoubleSupplier overrideInput) {
+  public LoadNextBall(Intake intake, DoubleSupplier overrideInput, double offset) {
     addRequirements(intake);
     this.intake = intake;
     override = overrideInput;
+    off = offset;
     //Shuffleboard.getTab("Intake").addString("Target", ()->{return "Target: "+oldPosition+", At: "+newPos;});
   }
 
@@ -70,7 +72,7 @@ public class LoadNextBall extends CommandBase {
       if (currentBall && !hadBall) {
         oldPosition = newPos;
       }
-      if (currentBall || ((status!=0) && (oldPosition + 15.0) > newPos)) {
+      if (currentBall || ((status!=0) && (oldPosition + off) > newPos)) {
         power = 1;
       }
       else {

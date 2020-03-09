@@ -59,7 +59,6 @@ public class Shooter extends SubsystemBase {
   NetworkTableEntry ty;
   NetworkTableEntry ta;
   NetworkTableEntry pipeline;
-
   /**
    * Creates a new Shooter.
    */
@@ -67,7 +66,6 @@ public class Shooter extends SubsystemBase {
     if (ShooterConstants.kHasShooter) {
       shooterMotor1 = new CANSparkMax(ShooterConstants.kShooterMotor1Port, MotorType.kBrushless);
       shooterMotor2 = new CANSparkMax(ShooterConstants.kShooterMotor2Port, MotorType.kBrushless);
-
       shooterEncoder1 = shooterMotor1.getEncoder();
       shooterEncoder2 = shooterMotor2.getEncoder();
 
@@ -265,8 +263,11 @@ public class Shooter extends SubsystemBase {
   public void stopHood() {
     hoodAngle.stop();
   }
+  public void hoodHoldPosition() {
+    hoodAngle.gotoPosition();
+  }
   public void hoodPosition(double target) {
-    hoodAngle.gotoPosition(target);
+    hoodAngle.setGOTO(target);
   }
   public void hoodPower(double speed) {
     hoodAngle.set(speed);
@@ -298,14 +299,14 @@ public class Shooter extends SubsystemBase {
   public boolean isFarAway() {
     return getLimelightDistance() > 10;
   }
-  double shooterSpeed = 5500;
+  double shooterSpeed = 7000;
   public void powerShooter(boolean power) {
     if (power) {
       shotABall();
       // shooterMotor1.set(1);
       // shooterMotor2.set(1);
-      shooterSpeed = isFarAway()? 5500 : 5000;
-      shooterSpeed = 7000;
+      // shooterSpeed = isFarAway()? 5500 : 5000;
+      // shooterSpeed = 7000;
       //shooterSpeed = 3700;
       shooterPID1.setReference(shooterSpeed, ControlType.kVelocity);
       shooterPID2.setReference(shooterSpeed, ControlType.kVelocity);
@@ -315,14 +316,29 @@ public class Shooter extends SubsystemBase {
       shooterMotor2.set(0);
     }
   }
+  double speed = 4750;
   /**
    * Determines whether the shooter is at speed to begin shooting
    * @return True if at speed, false if not.
    */
   public boolean atSpeed() {
-    return getShooterSpeed() > 5000;//3300;
+    return getShooterSpeed() > speed;//3300;
   }
   //auto 10 = 3300 rpm
+  public void setSpeeds(double target, double pid) {
+    speed = target;
+    shooterSpeed = pid;
+  }
+
+  //boolean climbMode = false;
+  public boolean turretIntoClimbMode() {
+    // if (!climbMode) {
+    //   //Start climbing!
+      return SudoTurretToPosition(0, 0.5);
+
+    // }
+    // return false;
+  }
   int direction;
   public void ZeroTurret() {
     TurretToPosition(0, 1);
@@ -340,7 +356,29 @@ public class Shooter extends SubsystemBase {
     }
     return 0.0;
   }
+  /**
+   * Sudo go to a turret position.
+   * @param targetPositon
+   * @param max
+   * @return True if at position or there is no turret. False if moving.
+   */
+  public boolean SudoTurretToPosition(double targetPositon, double max) {
+    if (ShooterConstants.kHasShooter && ShooterConstants.kHasTurret) {
+      double delta = targetPositon - turretEncoder.getPosition();
+      if (Math.abs(delta) > 5) {
+        double turn = delta>0? max : -max;
+        rotate(turn);
+        return false;
+      }
+      else {
+        rotate(0);
+        return true;
+      }
+    }
+    return true;
+  }
   public void CalibrateTurret(double currentPosition) {
+    System.out.println("Position to "+currentPosition);
     turretEncoder.setPosition(currentPosition);
   }
   
@@ -511,7 +549,7 @@ public class Shooter extends SubsystemBase {
     if (isFarAway()) {
       switch (side) {
         case 0:
-          return 2.1;
+          return 4.5;
         case 1:
           return 0;
         case 2:

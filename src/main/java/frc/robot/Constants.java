@@ -50,17 +50,17 @@ public abstract class Constants {
                 ShooterConstants.kHasTurret = true;
                 LEDConstants.kHasLEDs = false;
 
-                IntakeConstants.kHasIntakeColorSensor = false;
+                IntakeConstants.kHasIntakeColorSensor = true;
 
                 DriveConstants.kDebug = false;
                 ControlPanelConstants.kDebug = false;
                 ClimberConstants.kDebug = false;
-                IntakeConstants.kDebug = true;
-                ShooterConstants.kDebug = true;
+                IntakeConstants.kDebug = false;
+                ShooterConstants.kDebug = false;
                 LEDConstants.kDebug = false;
 
                 //CAN WIRING:
-                ShooterConstants.kShooterMotor1Port = 33;
+                ShooterConstants.kShooterMotor1Port = 31;
                 ShooterConstants.kShooterMotor2Port = 32;
                 ShooterConstants.kHoodAngleServoPort = 0; //PWM, not CAN
                 ShooterConstants.kTurretMotorPort = 21;
@@ -118,19 +118,19 @@ public abstract class Constants {
                 IntakeConstants.kIntakeFlipMaxOutput = 1;
                 IntakeConstants.kIntakeFlipMinOutput = -1;
                 IntakeConstants.kIntakeFlipInEncoder = -5.7467; //NOTE: This is NOT ZERO BECUASE YOU MUST RESET THE ROBOT TO THE OUTERMOST POSITION!
-                IntakeConstants.kIntakeFlipOutEncoder = -38; //NOTE: Different sprocket ratio, so different encoder value!
+                IntakeConstants.kIntakeFlipOutEncoder = -38.5; //NOTE: Different sprocket ratio, so different encoder value!
                 
                 IntakeConstants.kIntakeColorThesholdR = 6000; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
                 IntakeConstants.kIntakeColorThesholdG = 10200; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
                 IntakeConstants.kIntakeColorThesholdB = 0;
                 IntakeConstants.kIntakeColorThesholdIR = 0;
-                IntakeConstants.kIntakeColorThesholdProximity = 350;
+                IntakeConstants.kIntakeColorThesholdProximity = 200;//full practice 2 says 200?
 
                 IntakeConstants.kShooterColorThesholdR = 0;
                 IntakeConstants.kShooterColorThesholdG = 0;
                 IntakeConstants.kShooterColorThesholdB = 0;
                 IntakeConstants.kShooterColorThesholdIR = 0;
-                IntakeConstants.kShooterColorThesholdProximity = 100;
+                IntakeConstants.kShooterColorThesholdProximity = 285;
 
                 //SHOOTER CONSTANTS
                 
@@ -475,6 +475,12 @@ public abstract class Constants {
         public static double kTurretFF = 0.000015; 
         public static double kTurretMaxOutput = 1; 
         public static double kTurretMinOutput = -1;
+
+        public static double kHoodPositionReallyCloseWall = 1.9;
+        public static double kHoodPositionAuto = 0;
+        public static double kHoodPositionFar = -0.58;
+        public static double kHoodPositionMid = -0.73;
+        public static double kHoodPositionClose = -0.61;
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;
