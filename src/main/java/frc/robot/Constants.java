@@ -118,9 +118,10 @@ public abstract class Constants {
                 IntakeConstants.kIntakeFlipMaxOutput = 1;
                 IntakeConstants.kIntakeFlipMinOutput = -1;
                 IntakeConstants.kIntakeFlipInEncoder = -5.7467; //NOTE: This is NOT ZERO BECUASE YOU MUST RESET THE ROBOT TO THE OUTERMOST POSITION!
-                IntakeConstants.kIntakeFlipOutEncoder = -38.5; //NOTE: Different sprocket ratio, so different encoder value!
+                // IntakeConstants.kIntakeFlipOutEncoder = -38.5; //NOTE: Different sprocket ratio, so different encoder value!
+                IntakeConstants.kIntakeFlipOutEncoder = -35.5; //NOTE: Different sprocket ratio, so different encoder value!
                 
-                IntakeConstants.kIntakeColorThesholdR = 6000; //MAKE SURE THE GRAPH IS ORANGE AND NOT RED
+                IntakeConstants.kIntakeColorThesholdR = 6000; //MAKE SURE THE GRAPH IS ORANGE AND NOT REDb
                 IntakeConstants.kIntakeColorThesholdG = 10200; //MAKE SURE THE GRAPH IS RED AND NOT GREEN
                 IntakeConstants.kIntakeColorThesholdB = 0;
                 IntakeConstants.kIntakeColorThesholdIR = 0;
@@ -143,8 +144,10 @@ public abstract class Constants {
                 ShooterConstants.kShooterMinOutput = -1;
                 ShooterConstants.kMaxRPM = 5700;
 
-                ShooterConstants.kMaxTurretAngle = 100;//126 = 180degrees
-                ShooterConstants.kMinTurretAngle = -100;//-126 = 180 degrees
+                ShooterConstants.kMaxTurretAngle = 126;//126 = 180degrees
+                // ShooterConstants.kMaxTurretAngle = 100;//126 = 180degrees
+                ShooterConstants.kMinTurretAngle = -126;//-126 = 180 degrees
+                // ShooterConstants.kMinTurretAngle = -100;//-126 = 180 degrees
 
                 LEDConstants.kLEDPWMPort = 9;
             } break;

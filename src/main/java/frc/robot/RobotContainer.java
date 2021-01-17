@@ -207,11 +207,11 @@ public class RobotContainer {
 
       new JoystickButton(m_manipulatorJoystick, Button.kBumperLeft.value).whenPressed(()->{
         m_intake.setFlipper(true);
-        lnb.schedule();
+        //lnb.schedule();
       }).whenReleased(()->{
         //m_intake.setFlipper(false);
         m_intake.powerIntake(0);
-        lnb.cancel();
+        //lnb.cancel();
       }).whileActiveContinuous(()->{
         m_intake.powerIntake(0.7);//m_intake.ballInIntake()?0.3:0.7);
       });
