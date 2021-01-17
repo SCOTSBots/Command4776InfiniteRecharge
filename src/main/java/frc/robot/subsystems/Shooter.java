@@ -170,9 +170,9 @@ public class Shooter extends SubsystemBase {
   public boolean rotate(double turn) {
     if (ShooterConstants.kHasShooter) {
       double currentAngle = encoderToDegrees(turretEncoder.getPosition());
-      if (currentAngle+20 > ShooterConstants.kMaxTurretAngle)
+      if (currentAngle+30 > ShooterConstants.kMaxTurretAngle)
         turn /= 2;
-      if (currentAngle+20 < ShooterConstants.kMinTurretAngle)
+      if (currentAngle-30 < ShooterConstants.kMinTurretAngle)
         turn /= 2;
       if (turn > 0) {
         //Want to rotate CLOCKWISE, which INCREASES encoder counts

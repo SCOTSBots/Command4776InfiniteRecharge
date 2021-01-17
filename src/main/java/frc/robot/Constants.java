@@ -87,7 +87,7 @@ public abstract class Constants {
                 DriveConstants.kvVoltSecondsPerMeter = 2.78;
                 DriveConstants.kaVoltSecondsSquaredPerMeter = 0.381;
                 DriveConstants.kPDriveVel = 2.57;
-                DriveConstants.kTrackwidthMeters = 3.0;//TODO: put back;
+                DriveConstants.kTrackwidthMeters = 3.0;
                 DriveConstants.kDriveKinematics = new DifferentialDriveKinematics(
                     DriveConstants.kTrackwidthMeters);
                 DriveConstants.kFeedforward = new SimpleMotorFeedforward(
@@ -98,7 +98,7 @@ public abstract class Constants {
                 DriveConstants.kRightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
                 DriveConstants.kMaxSpeedMetersPerSecond = 1.0;
                 DriveConstants.kMaxAccelerationMetersPerSecondSquared = 1.0;
-                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 0.5 * Math.PI;//TODO: Put back/tune
+                DriveConstants.kMaxAngularSpeedRadiansPerSecond = 0.5 * Math.PI;
                 //DriveConstants.kRamseteB = 2;
                 //DriveConstants.kRamseteZeta = 0.7;
                 DriveConstants.kMaxRPM = 5700;
@@ -144,9 +144,9 @@ public abstract class Constants {
                 ShooterConstants.kShooterMinOutput = -1;
                 ShooterConstants.kMaxRPM = 5700;
 
-                ShooterConstants.kMaxTurretAngle = 126;//126 = 180degrees
+                ShooterConstants.kMaxTurretAngle = 200;//126 = 180degrees
                 // ShooterConstants.kMaxTurretAngle = 100;//126 = 180degrees
-                ShooterConstants.kMinTurretAngle = -126;//-126 = 180 degrees
+                ShooterConstants.kMinTurretAngle = -200;//-126 = 180 degrees
                 // ShooterConstants.kMinTurretAngle = -100;//-126 = 180 degrees
 
                 LEDConstants.kLEDPWMPort = 9;
