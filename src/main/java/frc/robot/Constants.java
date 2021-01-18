@@ -484,6 +484,11 @@ public abstract class Constants {
         public static double kHoodPositionFar = -0.58;
         public static double kHoodPositionMid = -0.73;
         public static double kHoodPositionClose = -0.61;
+
+        public static double kHoodPositionZone1 = 0.39;
+        public static double kHoodPositionZone2 = 0.17;//not tested
+        public static double kHoodPositionZone3 = 0.17;//not tested
+        public static double kHoodPositionZone4 = 0.23;
     }
     public static final class IntakeConstants {
         public static boolean kHasIntake = false;

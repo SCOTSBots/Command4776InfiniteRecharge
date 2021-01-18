@@ -8,6 +8,7 @@
 package frc.robot.subsystems;
 
 import java.util.Map;
+import java.util.function.DoubleConsumer;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
@@ -23,6 +24,7 @@ import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
+import edu.wpi.first.wpilibj.Servo;
 import frc.robot.ControlledServo;
 import frc.robot.ShuffleboardHelper;
 import frc.robot.Constants.ShooterConstants;
@@ -47,7 +49,8 @@ public class Shooter extends SubsystemBase {
   CANPIDController shooterPID2;
   PIDController turretPID;
 
-  ControlledServo hoodAngle;
+  Servo hoodAngle;
+  // ControlledServo hoodAngle;
 
 
   NetworkTableEntry LEDMode;
@@ -112,7 +115,8 @@ public class Shooter extends SubsystemBase {
         }
       } //End of turret
 
-      hoodAngle = new ControlledServo(ShooterConstants.kHoodAngleServoPort);
+      hoodAngle = new Servo(ShooterConstants.kHoodAngleServoPort);
+      // hoodAngle = new ControlledServo(ShooterConstants.kHoodAngleServoPort);
 
       //Get the Network Tables for the limelight
       table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -126,7 +130,9 @@ public class Shooter extends SubsystemBase {
       ShuffleboardHelper.AddToggle("Limelight", "LEDMode", LEDMode::setDouble, new Toggle<Integer>(1, 3));
       //ShuffleboardHelper.AddToggle("Limelight", "Stream PnP", cameraMode::setDouble, new Toggle<Integer>(1, 2));
 
-      // ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngleServo::set);
+      // ShuffleboardHelper.AddOutput("Hood Angle", 0, 1, hoodAngle::set);
+      DoubleConsumer change = test -> hoodAngle.set(test);
+      //ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, change);
       // ShuffleboardHelper.AddOutput(this, "Hood Angle", 0, 1, (x)->{
       //   hoodAngleServo1.set(x);
       //   //hoodAngleServo2.set(x);
@@ -149,7 +155,8 @@ public class Shooter extends SubsystemBase {
         Shuffleboard.getTab("Shooter").addString("Side Mode", this::printSide);
         Shuffleboard.getTab("Shooter").addBoolean("Far Away", this::isFarAway);
         Shuffleboard.getTab("Shooter").addNumber("TX", ()->tx.getDouble(0));
-        Shuffleboard.getTab("Shooter").addNumber("Hood Angle", hoodAngle::getPosition);
+        // Shuffleboard.getTab("Shooter").addNumber("Hood Angle", hoodAngle::getPosition);
+        Shuffleboard.getTab("Shooter").addNumber("Hood Angle", hoodAngle::get);
         Shuffleboard.getTab("Shooter").addNumber("avgshooter", this::getShooterSpeed);
         //Shuffleboard.getTab("Shooter").addNumber("turret pos", turretEncoder::getPosition); ADDED IN TURRET DEBUG
         Shuffleboard.getTab("Shooter").addBoolean("At Speed", this::atSpeed);
@@ -260,17 +267,27 @@ public class Shooter extends SubsystemBase {
       }
     }
   }
+  double currentHoodPosition = 0.5;
   public void stopHood() {
-    hoodAngle.stop();
+    //hoodAngle.stop();
+    hoodAngle.set(currentHoodPosition);
   }
   public void hoodHoldPosition() {
-    hoodAngle.gotoPosition();
+    //hoodAngle.gotoPosition();
+    System.out.println(angle);//.47=close1, .24=far4
   }
   public void hoodPosition(double target) {
-    hoodAngle.setGOTO(target);
+    target = MathUtil.clamp(target, 0.0, 1.0);
+    currentHoodPosition = target;
+    hoodAngle.set(target);
+    //hoodAngle.setGOTO(target);
   }
+  double angle = 0.5;
   public void hoodPower(double speed) {
-    hoodAngle.set(speed);
+    //hoodAngle.set(speed);
+    angle += speed / 100.0;
+    angle = MathUtil.clamp(angle, 0.0, 1.0);
+    hoodAngle.set(angle);
   }
 
   public double getLimelightDistance() {

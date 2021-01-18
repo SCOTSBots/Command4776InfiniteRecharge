@@ -279,38 +279,38 @@ public class RobotContainer {
         int pov = m_manipulatorJoystick.getPOV();
         switch(pov) {
           case 0: {//UP DPAD
-            m_shooter.setZoomPipeline(2);
-            m_shooter.hoodPosition(ShooterConstants.kHoodPositionMid);
-            m_shooter.setSpeeds(5000, 7000);
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionZone2);
           }
             break;
           case 90: {//Right DPAD
-            m_shooter.setZoomPipeline(1);
-            m_shooter.hoodPosition(ShooterConstants.kHoodPositionReallyCloseWall);
-            m_shooter.setSpeeds(4500, 7000);
+            // m_shooter.setZoomPipeline(1);
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionZone3);
           }
             break;
-          case 180:
+          case 180:{//DOWN DPAD
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionZone4);
+          }
           break;
           case 270: {//LEFT DPAD
-            m_shooter.setZoomPipeline(1);
-            m_shooter.hoodPosition(ShooterConstants.kHoodPositionClose);
-            m_shooter.setSpeeds(4750, 7000);
+            m_shooter.hoodPosition(ShooterConstants.kHoodPositionZone1);
           }
             break;
+            default: {
+              m_shooter.stopHood();
+            }
         }
-        m_shooter.toggleSide(pov == 180);
+        //m_shooter.toggleSide(pov == 180);
         
         boolean down = m_manipulatorJoystick.getBackButton();
         boolean up = m_manipulatorJoystick.getStartButton();
         if (down) {
-          m_shooter.hoodPower(1);
+          //m_shooter.hoodPower(1);
         }
         else if (up) {
-          m_shooter.hoodPower(-1);
+          //m_shooter.hoodPower(-1);
         }
         else {
-          m_shooter.hoodHoldPosition();
+          //m_shooter.hoodHoldPosition();
         }
       },m_shooter));
     }
